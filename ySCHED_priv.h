@@ -5,6 +5,7 @@
 
 #include    "ySCHED.h"
 #include    <yLOG.h>                    /* heatherly program logger            */
+#include    <yURG.h>                    /* heatherly program logger            */
 
 #define   _XOPEN_SOURCE
 #include  <stdio.h>
@@ -18,8 +19,8 @@
 
 /*===[[ VERSION ]]========================================*/
 /* rapidly evolving version number to aid with visual change confirmation     */
-#define   YSCHED_VER_NUM     "1.3e"
-#define   YSCHED_VER_TXT     "moved to make_program makefile enhancement"
+#define   YSCHED_VER_NUM     "1.4a"
+#define   YSCHED_VER_TXT     "update debugging, testing, modularity, and duration"
 
 
 
@@ -29,7 +30,6 @@ typedef const int        cint;
 typedef unsigned int     uint;
 
 
-#define     DEBUG_YSCHED        if (its.debug       == 'y')
 #define     SUCCESS             0
 #define     NOT_READY          -1
 #define     FAILED             -2
@@ -44,6 +44,14 @@ typedef unsigned int     uint;
 #define     PARSE_WKS          5
 #define     PARSE_YRS          6
 
+#define     TYPE_MNS      a_type == 0
+#define     TYPE_HRS      a_type == 1
+#define     TYPE_DYS      a_type == 2
+#define     TYPE_MOS      a_type == 3
+#define     TYPE_DOW      a_type == 4
+#define     TYPE_WKS      a_type == 5
+#define     TYPE_YRS      a_type == 6
+#define     RETURN(RC)   { strcpy (a_array, x_error); strcpy (mySCHED.last, x_error); return RC; }
 
 typedef struct cLOCAL tLOCAL;
 struct cLOCAL {
@@ -76,11 +84,15 @@ struct cLOCAL {
    int       cdow;         /* current dow of the week                     */
    int       coff;         /* offset of current day from today            */
    long      cset;         /* set date                                    */
+   /*---(effective)---------*/
+   char        effective   [500];
+   char        effout      [500];
+   char        global      [500];
+   char        gloout      [500];
+   /*---(done)--------------*/
 };
-extern  tLOCAL its;
+extern  tLOCAL mySCHED;
 
-extern char   effective [500];
-extern char   effout    [100];
 
 extern tSCHED    sched;
 
@@ -106,37 +118,34 @@ extern int   s_bmax;
 
 
 int        /*----: scheduling grammar value checker --------------------------*/
-ySCHED__convert    (cchar *a_field, cchar *a_input, cint a_min, cint a_max);
+ysched__convert    (cchar *a_field, cchar *a_input, cint a_min, cint a_max);
 
 char         /*--: interpret modifier --------------------[ ------ [ ------ ]-*/
-ySCHED__prep       (int a_type);
+ysched__prep       (int a_type);
 
 char         /*--: interpret step ------------------------[ ------ [ ------ ]-*/
-ySCHED__step       (void);
+ysched__step       (void);
 
 char         /*--: interpret modifier --------------------[ ------ [ ------ ]-*/
-ySCHED__modifier   (void);
+ysched__modifier   (void);
 
 char         /*--: interpret constants -------------------[ ------ [ ------ ]-*/
-ySCHED__const      (int a_type);
+ysched__const      (int a_type);
 
 int          /*--: interpret number ----------------------[ ------ [ ------ ]-*/
-ySCHED__number     (int a_type, char *a_number);
+ysched__number     (int a_type, char *a_number);
 
 int          /*--: interpret special day references ------[ ------ [ ------ ]-*/
-ySCHED__day        (void);
+ysched__day        (void);
 
 char         /*--: interpret ranges ----------------------[ ------ [ ------ ]-*/
-ySCHED__range      (int a_type);
+ysched__range      (int a_type);
 
 char         /*--: apply grammar to array ----------------[ ------ [ ------ ]-*/
-ySCHED__apply      (int a_type, char *a_array);
-
-char         /*--: interpret one field of grammar --------[ ------ [ ------ ]-*/
-ySCHED__field_NEW  (char *a_input, char *a_array, int a_type);
+ysched__apply      (int a_type, char *a_array);
 
 char       /*----: scheduling grammar field interpreter ----------------------*/
-ySCHED__field      (char *a_input, char *a_array, int a_type);
+ysched__field      (char *a_input, char *a_array, int a_type);
 
 char       /*----: make a printable version of the effective dates -----------*/
 ySCHED__effout     (void);
@@ -161,6 +170,20 @@ ySCHED__effend     (char *a_date, char a_side, long a_now);
 
 char       /*----: update effective for a list of exceptions -----------------*/
 ySCHED__effnot     (char *a_list, long a_now);
+
+
+int         ysched_duration         (char *a_input);
+
+/*345678901-12345678901-12345678901-12345678901-12345678901-12345678901-123456*/
+char        ysched__unit_quiet      (void);
+char        ysched__unit_loud       (void);
+char        ysched__unit_end        (void);
+
+
+
+
+
+
 
 #endif
 /*===[[ END ]]================================================================*/

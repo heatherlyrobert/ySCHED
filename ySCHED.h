@@ -4,7 +4,7 @@
 
  *   focus         : (PS) programming support
  *   niche         : (sg) scheduling_grammar
- *   application   : ySCHED
+ *   heritage      : horae (goddesses of seasons and porportions of time)
  *   purpose       : simple, elegant, and powerful kernighan scheduling grammar
  *
  *   base_system   : gnu/linux   (powerful, ubiquitous, technical, and hackable)
@@ -123,6 +123,7 @@ struct  cSCHED
    char      dow   [MAX_FIELD];       /* day of week       1-7                */
    char      wks   [MAX_FIELD];       /* week of year      1-53               */
    char      yrs   [MAX_FIELD];       /* years             1-50               */
+   int       dur;                     /* duration in minutes                  */
    char      eff   [MAX_EFF];         /* effective range (-100 to +365 days)  */
 };
 
@@ -145,7 +146,7 @@ ySCHED_reset       (void);
 char         /*--> parse scheduling grammar --------------[ ------ [ ------ ]-*/
 ySCHED_parse       (tSCHED *a_sched, char *a_recd);
 
-int          /*--> test for a specific time --------------[ ------ [ ------ ]-*/
+char         /*--> test for a specific time --------------[ ------ [ ------ ]-*/
 ySCHED_test        (tSCHED *a_sched, int a_hour, int a_minute);
 
 char         /*--> save results to a alternate struct ----[ ------ [ ------ ]-*/
