@@ -125,6 +125,20 @@ struct {
  */
 
 char         /*--: interpret modifier --------------------[ leaf   [ ------ ]-*/
+ysched__limits     (char a_type)
+{
+   /*---(set full limits)----------------*/
+   s_min       = s_fields [a_type].min;
+   s_max       = s_fields [a_type].max;
+   s_smax      = s_max;
+   /*---(overrides)----------------------*/
+   if      (TYPE_DYS)     s_smax = mySCHED.s_dim;
+   else if (TYPE_WKS)     s_smax = mySCHED.s_wiy;
+   /*---(complete)-----------------------*/
+   return 0;
+}
+
+char         /*--: interpret modifier --------------------[ leaf   [ ------ ]-*/
 ysched__prep       (int a_type)
 {
    /*---(initialize)---------------------*/
@@ -134,12 +148,6 @@ ysched__prep       (int a_type)
    s_rev       = '-';
    s_inv       = '-';
    s_stp       =   1;
-   /*---(set field limits)---------------*/
-   s_min       = s_fields [a_type].min;
-   s_bmax      = s_fields [a_type].max;
-   s_smax      = s_bmax;
-   if      (TYPE_DYS)     s_smax = mySCHED.ndys;
-   else if (TYPE_WKS)     s_smax = mySCHED.nwks;
    /*---(measure input string)-----------*/
    s_len       = strlen (s_input);
    /*---(complete)-----------------------*/
@@ -288,8 +296,8 @@ ysched__number     (int a_type, char *a_number)
    --rce;  if (x_num < s_fields [a_type].min)  return rce;
    --rce;  if (x_num > s_fields [a_type].max)  return rce;
    /*---(check exceptions)---------------*/
-   --rce;  if (TYPE_DYS)  if (x_num > mySCHED.ndys) return rce;
-   --rce;  if (TYPE_WKS)  if (x_num > mySCHED.nwks) return rce;
+   --rce;  if (TYPE_DYS)  if (x_num > mySCHED.s_dim) return rce;
+   --rce;  if (TYPE_WKS)  if (x_num > mySCHED.s_wiy) return rce;
    /*---(complete)-----------------------*/
    return x_num;
 }
@@ -309,18 +317,18 @@ ysched__day        (void)
    rc = ysched__number (PARSE_DYS, s_input);
    if (rc < 0) {
       --rce;  if (strcmp ("L", s_input) != 0)  return rce;
-      rc = mySCHED.ndys;
+      rc = mySCHED.s_dim;
    }
    x_day = rc;
    /*---(determine day of week)----------*/
-   x_dow = (((x_day + mySCHED.fdow) - 1) % 7);
+   x_dow = (((x_day + mySCHED.s_fdow) - 1) % 7);
    if (x_dow == 0) x_dow = 7;
    /*---(handle types)-------------------*/
    switch (x_type) {
    case 'a' :  /* after type, so push weekends forward  */
       if (x_dow == 7       )   { x_day += 1; x_dow = 1; }  /* next monday     */
       if (x_dow == 6       )   { x_day += 2; x_dow = 1; }  /* next monday     */
-      if (x_day >  mySCHED.ndys)   { x_day -= 3; x_dow = 5; }  /* last friday     */
+      if (x_day >  mySCHED.s_dim)   { x_day -= 3; x_dow = 5; }  /* last friday     */
       break;
    case 'b' :  /* before type, so push weekends backward */
       if (x_dow == 7       )   { x_day -= 2; x_dow = 5; }  /* prev friday     */
@@ -330,7 +338,7 @@ ysched__day        (void)
    case 'n' :  /* nearist type, so push sat back and sun forward */
       if (x_dow == 7       )   { x_day += 1; x_dow = 1; }  /* next monday     */
       if (x_dow == 6       )   { x_day -= 1; x_dow = 5; }  /* prev friday     */
-      if (x_day >  mySCHED.ndys)   { x_day -= 3; x_dow = 5; }  /* last friday     */
+      if (x_day >  mySCHED.s_dim)   { x_day -= 3; x_dow = 5; }  /* last friday     */
       if (x_day <= 0       )   { x_day += 3; x_dow = 1; }  /* first monday    */
       break;
    }
@@ -442,8 +450,8 @@ ysched__apply      (int a_type, char *a_array)
    }
    /*---(get in dots)--------------------*/
    for (i = 0         ; i <  s_min ; ++i)  a_array [i] = '.';
-   for (i = s_smax + 1; i <= s_bmax; ++i)  a_array [i] = '.';
-   a_array     [s_bmax + 1] = '\0';
+   for (i = s_smax + 1; i <= s_max; ++i)  a_array [i] = '.';
+   a_array     [s_max + 1] = '\0';
    /*---(complete)-----------------------*/
    return 0;
 }
@@ -508,7 +516,7 @@ ysched__field      (
    strcpy (a_array , x_error);
    strcpy (mySCHED.last, a_array);
    DEBUG_YSCHED yLOG_info    ("default"   , a_array);
-   for (i = 0; i < MAX_FIELD; ++i) x_array   [i]    = '_';
+   for (i = 0; i < LEN_HUND; ++i) x_array   [i]    = '_';
    DEBUG_YSCHED yLOG_info    ("initial"   , x_array);
    /*---(parse into sections)------------*/
    p = strtok_r (a_input, q, &s);
@@ -573,7 +581,7 @@ ysched_duration         (char *a_input)
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
    char        rc          =    0;
-   char        x_input     [MAX_FIELD];
+   char        x_input     [LEN_HUND];
    int         x_len       =    0;
    char        x_unit      =  '-';
    char       *x_units     = "smthd";
@@ -589,7 +597,7 @@ ysched_duration         (char *a_input)
       DEBUG_YSCHED yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   strncpy (x_input, a_input, MAX_FIELD);
+   strncpy (x_input, a_input, LEN_HUND);
    x_len = strlen (x_input);
    DEBUG_YSCHED yLOG_point   ("x_len"     , x_len);
    --rce;  if (x_len <= 0) {

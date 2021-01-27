@@ -180,7 +180,7 @@ ySCHED__effective  (char *a_recd, long a_now)
    if (strncmp(a_recd, "reset"    ,   5) == 0)    return -1;
    if (strncmp(a_recd, ".effective", 10) != 0)    return -1;
    /*---(break it down)------------------*/
-   strncpy(mySCHED.recd, a_recd  , MAX_RECD);
+   strncpy(mySCHED.recd, a_recd  , LEN_RECD);
    strtok(mySCHED.recd, " ");
    xbeg       = strtok(NULL    , " ");
    xend       = strtok(NULL    , " ");

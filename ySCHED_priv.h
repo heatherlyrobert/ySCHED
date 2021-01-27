@@ -1,3 +1,44 @@
+/*===[[ ONE_LINERS ]]=========================================================*/
+
+#define     P_FOCUS     "PS (programming support)"
+#define     P_NICHE     "sg (scheduling grammar)"
+#define     P_SUBJECT   "kernighan scheduling grammar"
+#define     P_PURPOSE   "simple, elegant, and powerful kernighan scheduling grammar"
+
+#define     P_NAMESAKE  "eunomia-horae (correct moment)
+#define     P_HERITAGE  "goddesses of seasons and porportions of time"
+#define     P_IMAGERY   ""
+#define     P_REASON    ""
+
+#define     P_ONELINE   P_NAMESAKE " " P_SUBJECT
+
+#define     P_BASENAME  ""
+#define     P_FULLPATH  ""
+#define     P_SUFFIX    ""
+#define     P_CONTENT   ""
+
+#define     P_SYSTEM    "gnu/linux   (powerful, ubiquitous, technical, and hackable)"
+#define     P_LANGUAGE  "ansi-c      (wicked, limitless, universal, and everlasting)"
+#define     P_CODESIZE  "small       (appoximately 10,000 slocl)"
+#define     P_DEPENDS   "none"
+
+#define     P_AUTHOR    "heatherlyrobert"
+#define     P_CREATED   "2011-03"
+
+#define     P_VERMAJOR  "1.--, in production and general use"
+#define     P_VERMINOR  "1.4-, clean, rework, and expand testing"
+#define     P_VERNUM    "1.4b"
+#define     P_VERTXT    "broke out date testing and made tighter unit testing"
+
+#define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
+#define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
+#define     P_REMINDER  "there are many better options, but i *own* every byte of this one"
+
+/*345678901-12345678901-12345678901-12345678901-12345678901-12345678901-12345678901-12345678901-*/
+/*===[[ END_HEADER ]]=========================================================*/
+
+
+
 
 /*===[[ HEADER GUARD ]]=======================================================*/
 #ifndef YSCHED_priv_hguard
@@ -15,12 +56,12 @@
 #include  <sys/time.h>
 #include  <unistd.h>
 
+#include  <ySTR.h>
+
 
 
 /*===[[ VERSION ]]========================================*/
 /* rapidly evolving version number to aid with visual change confirmation     */
-#define   YSCHED_VER_NUM     "1.4a"
-#define   YSCHED_VER_TXT     "update debugging, testing, modularity, and duration"
 
 
 
@@ -34,7 +75,6 @@ typedef unsigned int     uint;
 #define     NOT_READY          -1
 #define     FAILED             -2
 #define     SKIPPING           -3
-#define     MAX_RECD           1000
 
 #define     PARSE_MNS          0
 #define     PARSE_HRS          1
@@ -57,10 +97,10 @@ typedef struct cLOCAL tLOCAL;
 struct cLOCAL {
    /*---(overall)-----------*/
    char      status;
-   char      full  [MAX_RECD];
+   char      full  [LEN_RECD];
    char      debug;
    /*---(parsing)-----------*/
-   char      recd  [MAX_RECD];
+   char      recd  [LEN_RECD];
    char     *xmin;
    char     *xhrs;
    char     *xdys;
@@ -69,21 +109,23 @@ struct cLOCAL {
    char     *xwks;
    char     *xyrs;
    char     *xdur;
-   char      last [MAX_FIELD];
+   char      last [LEN_HUND];
    /*---(statistics)--------*/
-   int       nwks;         /* number of weeks in current year             */
-   int       ndys;         /* number of days in current month             */
-   int       fdow;         /* dow of the 1st of current month             */
-   /*---(current)-----------*/
-   long      cdate;        /* current unix date                           */
-   tTIME    *cbroke;       /* current unix broke-down date                */
-   int       cyrs;         /* current year                                */
-   int       cwks;         /* current week in the year                    */
-   int       cmos;         /* current month in the year                   */
-   int       cdys;         /* current day in the month                    */
-   int       cdow;         /* current dow of the week                     */
-   int       coff;         /* offset of current day from today            */
-   long      cset;         /* set date                                    */
+   /*---(as-set date)-------*/
+   long        s_epoch;                /* as-set unix epoch date              */
+   tTIME      *s_broke;                /* as-set unix broke-down date         */
+   int         s_year;                 /* as-set year (incremental from 1900) */
+   int         s_month;                /* as_set month in the year            */
+   int         s_day;                  /* as_set day in the month             */
+   /*---(as-set stats)------*/
+   int         s_dim;                  /* number of days in as-set month      */
+   int         s_diy;                  /* number of days in as-set year       */
+   int         s_doy;                  /* as_set day number in year           */
+   int         s_wiy;                  /* number of weeks in as-set year      */
+   int         s_woy;                  /* as_set week number in the year      */
+   int         s_dow;                  /* as_set dow of the week              */
+   int         s_fdow;                 /* dow of the 1st of current month     */
+   int         s_off;                  /* offset of as-set day from today     */
    /*---(effective)---------*/
    char        effective   [500];
    char        effout      [500];
@@ -94,7 +136,7 @@ struct cLOCAL {
 extern  tLOCAL mySCHED;
 
 
-extern tSCHED    sched;
+extern tSCHED    g_sched;
 
 char *strtok_r (char*, cchar*, char**);
 int   isdigit  (int);
@@ -111,14 +153,21 @@ extern int   s_stp;
 extern int   s_beg;
 extern int   s_end;
 extern int   s_min;
+extern int   s_max;
 extern int   s_smax;
-extern int   s_bmax;
 
 
 
+/*345678901-12345678901-12345678901-12345678901-12345678901-12345678901-123456*/
+char        ysched_resetdate        (void);
+char        ysched_date__defense    (cint a_year, cint a_month, cint a_day);
+char        ysched_date__current    (long a_now);
+char        ysched_date__dow_1st    (void);
+char        ysched_date__max_days   (void);
+char        ysched_date__max_weeks  (void);
 
-int        /*----: scheduling grammar value checker --------------------------*/
-ysched__convert    (cchar *a_field, cchar *a_input, cint a_min, cint a_max);
+char        ysched__limits          (char a_type);
+
 
 char         /*--: interpret modifier --------------------[ ------ [ ------ ]-*/
 ysched__prep       (int a_type);
@@ -154,7 +203,7 @@ char       /*----: set the effective date range ------------------------------*/
 ySCHED__effective  (char *a_recd, long a_now);
 
 char*      /*----: unit testing accessor for clean validation interface ------*/
-ySCHED__accessor   (char *a_question);
+ysched__accessor   (char *a_question);
 
 char       /*----: initialize the effective range ----------------------------*/
 ySCHED__effinit    (void);

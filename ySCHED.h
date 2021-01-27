@@ -101,6 +101,8 @@
 #define   YSCHED_hguard     loaded
 
 
+#include  <ySTR_solo.h>
+
 
 /*===[[ CONSTANTS ]]======================================*/
 #define   ySCHED_ANY         -1
@@ -109,51 +111,40 @@
 
 
 /*===[[ PUBLIC STRUCTURE ]]===============================*/
-#define   MAX_RAW            200
-#define   MAX_FIELD          100
-#define   MAX_EFF            500
+#define   LEN_EFF            500
 typedef struct cSCHED  tSCHED;
 struct  cSCHED
 {
-   char      raw   [MAX_RAW];         /* raw scheduling grammar text          */
-   char      min   [MAX_FIELD];       /* minutes           0-59               */
-   char      hrs   [MAX_FIELD];       /* hours             0-23               */
-   char      dys   [MAX_FIELD];       /* days of month     1-31               */
-   char      mos   [MAX_FIELD];       /* month of year     1-12               */
-   char      dow   [MAX_FIELD];       /* day of week       1-7                */
-   char      wks   [MAX_FIELD];       /* week of year      1-53               */
-   char      yrs   [MAX_FIELD];       /* years             1-50               */
+   long      epoch;                   /* validity (year, month, and day only) */
+   char      raw   [LEN_FULL];        /* raw scheduling grammar text          */
+   char      min   [LEN_LONG];        /* minutes           0-59               */
+   char      hrs   [LEN_TITLE];       /* hours             0-23               */
+   char      dys   [LEN_DESC];        /* days of month     1-31               */
+   char      mos   [LEN_LABEL];       /* month of year     1-12               */
+   char      dow   [LEN_TERSE];       /* day of week       1-7                */
+   char      wks   [LEN_LONG];        /* week of year      1-53               */
+   char      yrs   [LEN_LONG];        /* years             1-50               */
    int       dur;                     /* duration in minutes                  */
-   char      eff   [MAX_EFF];         /* effective range (-100 to +365 days)  */
+   char      eff   [LEN_EFF];         /* effective range (-100 to +365 days)  */
 };
 
+typedef    const int      cint;
+typedef    const short    cshort;
+typedef    const char     cchar;
 
 
 /*===[[ PUBLIC FUNCTIONS ]]===============================*/
 
-char*        /*--> return library versioning info --------[ ------ [ ------ ]-*/
-ySCHED_version     (void);
+/*345678901-12345678901-12345678901-12345678901-12345678901-12345678901-123456*/
+char*       ySCHED_version          (void);
+char        ySCHED_reset            (void);
 
-char         /*--> set debugging mode --------------------[ ------ [ ------ ]-*/
-ySCHED_debug       (char a_flag);
+char        ySCHED_setdate          (short a_year, char a_month, char a_day);
+char        ySCHED_parse            (tSCHED *a_sched, cchar *a_recd);
+char        ySCHED_test             (tSCHED *a_sched, int a_hour, int a_minute);
 
-char         /*--> set the date for parsing --------------[ ------ [ ------ ]-*/
-ySCHED_setdate     (int a_year, int a_month, int a_day);
-
-char         /*--> reset globals and effective dates -----[ ------ [ ------ ]-*/
-ySCHED_reset       (void);
-
-char         /*--> parse scheduling grammar --------------[ ------ [ ------ ]-*/
-ySCHED_parse       (tSCHED *a_sched, char *a_recd);
-
-char         /*--> test for a specific time --------------[ ------ [ ------ ]-*/
-ySCHED_test        (tSCHED *a_sched, int a_hour, int a_minute);
-
-char         /*--> save results to a alternate struct ----[ ------ [ ------ ]-*/
-ySCHED_save        (tSCHED *a_sched);
-
-char         /*--> load data from an alternate struct ----[ ------ [ ------ ]-*/
-ySCHED_load        (tSCHED *a_sched);
+char        ySCHED_save             (tSCHED *a_sched);
+char        ySCHED_load             (tSCHED *a_sched);
 
 
 
