@@ -15,10 +15,18 @@ ysched_resetdate        (void)
 {
    /*---(header)-------------------------*/
    DEBUG_YSCHED  yLOG_senter  (__FUNCTION__);
+   /*---(date specific)------------------*/
    mySCHED.s_epoch = mySCHED.s_off   = 0;
    mySCHED.s_year  = mySCHED.s_month = mySCHED.s_day   = 0;
    mySCHED.s_doy   = mySCHED.s_woy   = mySCHED.s_dow   = 0;
    mySCHED.s_wiy   = mySCHED.s_dim   = mySCHED.s_fdow  = 0;
+   /*---(field specific)-----------------*/
+   s_type      = -1;
+   strlcpy (s_label, "-", LEN_LABEL);
+   s_min       = 0;
+   s_max       = 0;
+   s_tmax      = 0;
+   /*---(complete)-----------------------*/
    DEBUG_YSCHED  yLOG_sexit   (__FUNCTION__);
    return 0;
 }
@@ -200,6 +208,16 @@ ysched_date__max_weeks  (void)
    strftime(t, 10, "%W", x_broke);  /* first more than half week of the year   */
    mySCHED.s_woy            = atoi(t);
    DEBUG_YSCHED  yLOG_value   ("s_woy"      , mySCHED.s_woy);
+   /*---(work out the max weeks)-------------*/
+   x_broke          = localtime (&(mySCHED.s_epoch));
+   x_broke->tm_mon  = 0;
+   x_broke->tm_mday = 1;
+   x_epoch          = mktime (x_broke);
+   x_broke          = localtime (&x_epoch);
+   strftime(t, 10, "%W", x_broke);  /* first more than half week of the year   */
+   mySCHED.s_wze            = atoi(t);
+   DEBUG_YSCHED  yLOG_value   ("s_wze"      , mySCHED.s_wze);
+   /*> DEBUG_YSCHED  printf("%1ddow, %s, %02dnwks¦", mySCHED.s_broke->tm_wday, t, mySCHED.s_wiy);   <*/
    /*---(work out the max weeks)-------------*/
    x_broke          = localtime (&(mySCHED.s_epoch));
    ++x_broke->tm_year;

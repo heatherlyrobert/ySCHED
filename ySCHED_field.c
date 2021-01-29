@@ -3,9 +3,19 @@
 #include   "ySCHED_priv.h"
 
 
+
+char      e_func      [LEN_LABEL] = "";
+int       e_line      = 0;
+char      e_issue     [LEN_DESC]  = "";
+int       e_pos       = 0;
+int       e_len       = 0;
+char      e_fancy     [LEN_RECD]  = "";
+
+
+
 #define   MAX_FIELDS      10
 struct {
-   char        label       [15];
+   char        label       [LEN_LABEL];
    int         min;
    int         max;
 } s_fields [MAX_FIELDS] = {
@@ -15,7 +25,7 @@ struct {
    { "days"          ,   1 ,  31   },
    { "months"        ,   1 ,  12   },
    { "daysofweek"    ,   1 ,   7   },
-   { "weeks"         ,   1 ,  54   },
+   { "weeks"         ,   0 ,  53   },
    { "years"         ,   0 ,  50   },
    { "---end---"     ,   0 ,   0   },
    { "---end---"     ,   0 ,   0   },
@@ -32,7 +42,7 @@ struct {
 } s_const [100] = {
    /* 12345678901234    12345678901234   123   123    1     1   */
    /*--- years -------------------------------------------------*/
-   { "years"         , "*"             ,   0 , 999,  '-',  '-'   },
+   { "years"         , "*"             ,   0 ,  99,  '-',  '-'   },
    /*--- weeks of the year -------------------------------------*/
    { "weeks"         , "*"             ,   0 ,  54,  '-',  '-'   },
    { "weeks"         , "Lw"            ,   0 ,   0,  'y',  '-'   },
@@ -83,14 +93,15 @@ struct {
    /*--- days of the week : ranges -----------------------------*/
    { "daysofweek"    , "W"             ,   1 ,   5,  '-',  '-'   },
    { "daysofweek"    , "Work"          ,   1 ,   5,  '-',  '-'   },
-   { "daysofweek"    , "E"             ,   6 ,   7,  '-',  '-'   },
+   { "daysofweek"    , "O"             ,   6 ,   7,  '-',  '-'   },
    { "daysofweek"    , "Off"           ,   6 ,   7,  '-',  '-'   },
    /*--- hours : ranges ----------------------------------------*/
    { "hours"         , "*"             ,   0 ,  23,  '-',  '-'   },
-   { "hours"         , "B"             ,   8 ,  16,  '-',  '-'   },
+   { "hours"         , "W"             ,   8 ,  16,  '-',  '-'   },
    { "hours"         , "Work"          ,   8 ,  16,  '-',  '-'   },
    { "hours"         , "O"             ,   8 ,  16,  '-',  'y'   },
    { "hours"         , "Off"           ,   8 ,  16,  '-',  'y'   },
+   { "hours"         , "B"             ,   5 ,  22,  '-',  'y'   },
    { "hours"         , "Batch"         ,   5 ,  22,  '-',  'y'   },
    /*--- hours : extended --------------------------------------*/
    { "hours"         , "Light"         ,   7 ,  18,  '-',  '-'   },
@@ -124,39 +135,150 @@ struct {
  *
  */
 
+
+
+/*====================------------------------------------====================*/
+/*===----                       parsing support                        ----===*/
+/*====================------------------------------------====================*/
+static void      o___SUPPORT_________________o (void) {;};
+
+char
+ysched__trouble         (int *a_func, int a_line, char *a_issue, int a_pos, int a_len)
+{
+   strlcpy (e_func , a_func , LEN_LABEL);
+   e_line  = a_line;
+   strlcpy (e_issue, a_issue, LEN_DESC);
+   e_pos   = a_pos;
+   e_len   = a_len;
+   return 0;
+}
+
 char         /*--: interpret modifier --------------------[ leaf   [ ------ ]-*/
 ysched__limits     (char a_type)
 {
+   char        rce         =  -10;
+   /*---(default)------------------------*/
+   s_type      = -1;
+   strlcpy (s_label, "-", LEN_LABEL);
+   s_min       = 0;
+   s_max       = 0;
+   s_tmax      = 0;
+   /*---(defense)------------------------*/
+   --rce;  if (mySCHED.s_epoch <=  0) {
+      ysched__trouble (""       , __LINE__, "epoch unset", 0, 0);
+      return rce;
+   }
+   --rce;  if (a_type <  0) {
+      ysched__trouble (""       , __LINE__, "type not valid", 0, 0);
+      return rce;
+   }
+   --rce;  if (a_type >= MAX_FIELDS)  return rce;
+   --rce;  if (s_fields [a_type].label [0] == '-')  return rce;
    /*---(set full limits)----------------*/
+   s_type      = a_type;
+   strlcpy (s_label, s_fields [a_type].label, LEN_LABEL);
    s_min       = s_fields [a_type].min;
    s_max       = s_fields [a_type].max;
-   s_smax      = s_max;
+   s_tmax      = s_max;
    /*---(overrides)----------------------*/
-   if      (TYPE_DYS)     s_smax = mySCHED.s_dim;
-   else if (TYPE_WKS)     s_smax = mySCHED.s_wiy;
+   if      (TYPE_DYS) {
+      s_max = mySCHED.s_dim;
+   }
+   else if (TYPE_WKS) {
+      s_min = mySCHED.s_wze;
+      s_max = mySCHED.s_wiy;
+   }
    /*---(complete)-----------------------*/
    return 0;
 }
 
 char         /*--: interpret modifier --------------------[ leaf   [ ------ ]-*/
-ysched__prep       (int a_type)
+ysched__prep       (char *p)
 {
-   /*---(initialize)---------------------*/
+   char        rce         =  -10;
+   /*---(default)------------------------*/
    s_beg       =  -1;
    s_end       =  -1;
    s_not       = '-';
    s_rev       = '-';
    s_inv       = '-';
+   s_flp       = '-';
    s_stp       =   1;
+   strlcpy (s_section, "", LEN_HUND);
+   strlcpy (s_input  , "", LEN_HUND);
+   s_len       =   0;
+   s_ptr       = s_input;
+   /*---(defense)------------------------*/
+   --rce;  if (mySCHED.s_epoch <=  0) {
+      ysched__trouble (""       , __LINE__, "epoch unset", 0, 0);
+      return rce;
+   }
+   --rce;  if (p == NULL)   return rce;
    /*---(measure input string)-----------*/
+   strlcpy (s_section, p, LEN_HUND);
+   strlcpy (s_input  , p, LEN_HUND);
+   DEBUG_YSCHED yLOG_info    ("s_input"   , s_input);
    s_len       = strlen (s_input);
+   DEBUG_YSCHED yLOG_value   ("s_len"     , s_len);
+   --rce;  if (s_len <= 0)  return rce;
    /*---(complete)-----------------------*/
    return 0;
 }
 
+char         /*--: apply grammar to array ----------------[ ------ [ ------ ]-*/
+ysched__empty           (char *a_array)
+{
+   /*---(locals)-----------+-----------+-*/
+   char        rce         =  -10;
+   int         i           =    0;
+   --rce;  if (a_array == NULL)  return rce;
+   for (i = 0;         i <  s_min;  ++i) a_array   [i]    = '.';
+   for (i = s_min;     i <= s_max;  ++i) a_array   [i]    = '_';
+   for (i = s_max + 1; i <= s_tmax; ++i) a_array   [i]    = '.';
+   a_array [s_tmax + 1] = '\0';
+   return 0;
+}
+
+char         /*--: apply grammar to array ----------------[ ------ [ ------ ]-*/
+ysched__apply           (char *a_array)
+{
+   /*---(locals)-----------+-----------+-*/
+   char        x_mark      = '1';
+   int         x_temp      =  0;
+   int         i           =  0;
+   int         c           =  0;
+   /*---(check for not)------------------*/
+   if (s_not == 'y')      x_mark = '_';
+   /*---(defense)------------------------*/
+   if (s_beg < s_min ) s_beg = s_min;
+   if (s_end > s_max)  s_end = s_max;
+   /*---(update normal)------------------*/
+   /*> printf ("\n");                                                                 <*/
+   /*> printf ("%2dn, %2db, %2de, %2dx, %2d/, %c %c %c %c\n", s_min, s_beg, s_end, s_max, s_stp, s_not, s_rev, s_inv, s_flp);   <*/
+   for (i = s_min; i <= s_max; ++i) {
+      /*> printf ("  %2di, %2d, %2d\n", i, (i - s_beg), (i - s_beg) % s_stp);         <*/
+      if ((i - s_beg) % s_stp != 0)  continue;
+      if      (s_inv != 'y' && (i <  s_beg || i >  s_end))  continue;
+      else if (s_inv == 'y' && (i >= s_beg && i <= s_end))  continue;
+      if (s_rev == 'y')   a_array [s_max - (i - s_min)] = x_mark;
+      else                a_array [i]                   = x_mark;
+      ++c;
+   }
+   /*---(complete)-----------------------*/
+   return c;
+}
+
+
+
+/*====================------------------------------------====================*/
+/*===----                      modifiers                               ----===*/
+/*====================------------------------------------====================*/
+static void      o___MODS____________________o (void) {;};
+
 char         /*--: interpret modifier --------------------[ leaf   [ ------ ]-*/
-ysched__modifier   (void)
-{ /*---(design rules)--------------------*/
+ysched__modify          (void)
+{  
+   /*---(design rules)--------------------*/
    /*
     *  there can only be one modifier per range specifier and it must appear
     *  as the very first character
@@ -166,91 +288,270 @@ ysched__modifier   (void)
     *     !   inverse      turn on each element not listed, meaning, all but
     *
     */
+   char        rce         =  -10;
+   char        c           =    0;
+   /*---(default)------------------------*/
+   ysched__trouble ("-"      , 0       , "-"              , -1, 0);
+   /*---(defense)------------------------*/
+   --rce;  if (mySCHED.s_epoch <=  0) {
+      ysched__trouble ("modify" , __LINE__, "epoch not set"  , 0, 0);
+      return rce;
+   }
    /*---(parse)--------------------------*/
-   while (s_input [0] != '\0') {
+   while (s_ptr [0] != '\0') {
       /*---(filter)----------------------*/
-      if (strchr ("~^!", s_input [0]) == NULL)  return 0;
+      if (strchr ("~^!|", s_ptr [0]) == NULL)  break;
       /*---(parse)-----------------------*/
-      if (s_input [0] == '!')  s_not = 'y';
-      if (s_input [0] == '^')  s_rev = 'y';
-      if (s_input [0] == '~')  s_inv = 'y';
+      if (s_ptr [0] == '!')  s_not = 'y';
+      if (s_ptr [0] == '^')  s_rev = 'y';
+      if (s_ptr [0] == '~')  s_inv = 'y';
+      if (s_ptr [0] == '|')  s_flp = 'y';
       /*---(next)------------------------*/
-      ++s_input;
+      ++s_ptr;
       --s_len;
+      ++c;
    }
    /*---(complete)-----------------------*/
-   return 0;
+   return c;
 }
 
 char         /*--: interpret step ------------------------[ leaf   [ ------ ]-*/
 ysched__step       (void)
-{ /*---(design rules)--------------------*/
-   /*
-    *  there can be only one step value, it must appear last, and it is
-    *  preceeded by the forward slash ('/')
-    *
-    */
-   /*---(locals)-----------+-----------+-*/
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
    char       *p           = NULL;
-   char       *q           = "/";
-   char       *s           = NULL;
-   char       *r           = NULL;
-   char        rce         = -10;
-   /*---(initialize)---------------------*/
-   p      = s_input + s_len - 1;
-   /*> printf ("start     %3d:%c\n", p[0], p[0]);                                     <*/
-   /*---(find marker)--------------------*/
-   while (p > s_input) {
-      /*> printf ("checking  %3d:%c\n", p[0], p[0]);                                  <*/
-      if (p [0] == '/')  break;
-      --p;
+   int         l           =    0;
+   int         i           =    0;
+   int         x_num       =   -1;
+   char        e           [LEN_LABEL] = "";
+   char        n           =    0;
+   /*---(default)------------------------*/
+   ysched__trouble ("-"      , 0       , "-"              , -1, 0);
+   /*---(defense)------------------------*/
+   --rce;  if (mySCHED.s_epoch <=  0) {
+      ysched__trouble ("step"   , __LINE__, "epoch not set"  , 0, 0);
+      return rce;
    }
-   if (p == s_input)   return 0;
-   --rce;  if (p [1] == '\0'   )   return rce;
+   /*---(find marker)--------------------*/
+   /*> printf ("%s\n", s_ptr);                                                        <*/
+   p = strrchr (s_ptr, '/');
+   if (p == NULL)   return 0;
+   --rce;  if (p == s_ptr) {
+      ysched__trouble ("step"   , __LINE__, "no base number" , n, 1);
+      return rce;
+   }
+   n = p - s_ptr;
+   --rce;  if (p [1] == '\0'   ) {
+      ysched__trouble ("step"   , __LINE__, "no actual step" , n, 1);
+      return rce;
+   }
    p [0] = '\0';
    --s_len;
-   /*---(test)---------------------------*/
-   r = p + 1;
-   --rce;
-   while (r [0] != NULL) {
-      /*> printf ("verifying %3d:%c\n", r[0], r[0]);                                  <*/
-      if (strchr ("0123456789", r [0]) == NULL)  return rce;
-      ++r;
-      --s_len;
+   /*---(check characters)--------------*/
+   l = strlen (p + 1);
+   /*> printf ("%2d[%s]\n", l, p + 1);                                                <*/
+   --rce;  for (i = 1; i <= l; ++i) {
+      if (strchr ("0123456789", p [i]) == NULL) {
+         sprintf (e, "bad char (%c)", p [i]);
+         ysched__trouble ("step"   , __LINE__, e                , n + i, 1);
+         return rce;
+      }
    }
    /*---(interpret)----------------------*/
-   s_stp = atoi (p + 1);
-   --rce;  if (s_stp <= 0)  return rce;
+   x_num = atoi (p + 1);
+   --rce;  if (x_num <= 0) {
+      sprintf (e, "too small <%d", 1);
+      ysched__trouble ("step"   , __LINE__, e                , n + 1, strlen (p + 1));
+      return rce;
+   }
+   --rce;  if (x_num > (s_max / 2)) {
+      sprintf (e, "too large >%d", s_max / 2);
+      ysched__trouble ("step"   , __LINE__, e                , n + 1, strlen (p + 1));
+      return rce;
+   }
+   /*---(save back)----------------------*/
+   s_stp = x_num;
    /*---(complete)-----------------------*/
-   return 0;
+   return 1;
+}
+
+int          /*--: interpret special day references ------[ leaf   [ ------ ]-*/
+ysched__dow        (void)
+{
+   /*---(locals)-----------+-----------+-*/
+   char        rce         = -10;
+   int         rc          = 0;
+   char        x_type      = '-';
+   int         x_day       =  0;
+   int         x_dow       =  0;
+   int         a           =  0;
+   char        e           [LEN_LABEL] = "";
+   /*---(defense)------------------------*/
+   --rce;  if (mySCHED.s_epoch <=  0) {
+      ysched__trouble ("dow"    , __LINE__, "epoch not set", 0, 0);
+      return rce;
+   }
+   /*---(get type)-----------------------*/
+   x_type = s_ptr [s_len - 1];
+   --rce;  if (strchr ("abnABN", x_type) == NULL) {
+      ysched__trouble ("dow"    , __LINE__, "bad or no type" , s_len - 1, 1);
+      return rce;
+   }
+   --rce;  if (s_type != PARSE_DYS) {
+      ysched__trouble ("dow"    , __LINE__, "only for days"  , 0, 0);
+      return rce;
+   }
+   /*---(get day)------------------------*/
+   s_ptr [--s_len] = '\0';
+   if (strcmp ("", s_ptr) == 0)  {
+      ysched__trouble ("dow"    , __LINE__, "no base value"  , 0, 0);
+      return rce;
+   }
+   if (strcmp ("L", s_ptr) == 0)  x_day = mySCHED.s_dim;
+   else                           x_day = ysched__number (s_ptr);
+   --rce;  if (x_day < 0) return rce;
+   /*---(determine day of week)----------*/
+   x_dow = (((x_day + mySCHED.s_fdow) - 1) % 7);
+   if (x_dow == 0) x_dow = 7;
+   /*---(help with nearist)--------------*/
+   if (x_type == 'N') {
+      if (x_dow >= 4)  x_type = 'A';
+      else             x_type = 'B';
+   }
+   if (x_type == 'n') {
+      if (x_dow == 7)  x_type = 'a';
+      else             x_type = 'b';
+   }
+   /*---(handle types)-------------------*/
+   switch (x_type) {
+   case 'a' :  /* after type, so push weekends forward  */
+      if (x_dow == 7       )   { x_day += 1; x_dow = 1; }  /* next monday     */
+      if (x_dow == 6       )   { x_day += 2; x_dow = 1; }  /* next monday     */
+      if (x_day >  mySCHED.s_dim)   { x_day -= 3; x_dow = 5; }  /* last friday     */
+      break;
+   case 'b' :  /* before type, so push weekends backward */
+      if (x_dow == 7       )   { x_day -= 2; x_dow = 5; }  /* prev friday     */
+      if (x_dow == 6       )   { x_day -= 1; x_dow = 5; }  /* prev friday     */
+      if (x_day <= 0       )   { x_day += 3; x_dow = 1; }  /* first monday    */
+      break;
+   case 'A' :  /* after type, so push to next saturday */
+      if (x_dow >= 1 && x_dow <= 5) {
+         x_day += 6 - x_dow;
+         x_dow  = 6;
+      }
+      if (x_day >  mySCHED.s_dim)   { x_day -= 6; x_dow = 7; }  /* last sun   */
+      break;
+   case 'B' :  /* before type, so push to previous sunday */
+      if (x_dow >= 1 && x_dow <= 5) {
+         x_day -= x_dow;
+         x_dow  = 7;
+      }
+      if (x_day <= 0)               { x_day += 6; x_dow = 6; }  /* next sat   */
+      break;
+   }
+   /*---(save)---------------------------*/
+   s_beg = s_end = x_day;
+   /*---(complete)-----------------------*/
+   return 1;
+}
+
+
+
+/*====================------------------------------------====================*/
+/*===----                       base values                            ----===*/
+/*====================------------------------------------====================*/
+static void      o___VALUES__________________o (void) {;};
+
+int          /*--: interpret number ----------------------[ leaf   [ ------ ]-*/
+ysched__number     (cchar *a_number)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   int         l           =    0;
+   int         i           =    0;
+   int         x_num       =   -1;
+   char        e           [LEN_LABEL] = "";
+   /*---(default)------------------------*/
+   ysched__trouble ("-"      , 0       , "-"              , -1, 0);
+   /*---(defense)------------------------*/
+   --rce;  if (mySCHED.s_epoch <=  0) {
+      ysched__trouble ("number" , __LINE__, "epoch not set"  , 0, 0);
+      return rce;
+   }
+   --rce;  if (a_number     == NULL) {
+      ysched__trouble ("number" , __LINE__, "NULL input"     , 0, 0);
+      return rce;
+   }
+   --rce;  if (a_number [0] == '\0') {
+      ysched__trouble ("number" , __LINE__, "empty input"    , 0, 0);
+      return rce;
+   }
+   /*---(defense: non-numeric)----------*/
+   l = strlen (a_number);
+   --rce;  for (i = 0; i < l; ++i) {
+      if (strchr ("0123456789", a_number [i]) == NULL) {
+         sprintf (e, "bad char (%c)", a_number [i]);
+         ysched__trouble ("number" , __LINE__, e                , i, 1);
+         return rce;
+      }
+   }
+   /*---(interpret)----------------------*/
+   x_num = atoi (a_number);
+   /*---(defense)------------------------*/
+   --rce;  if (x_num == 0 && strcmp ("0", a_number) != 0) {
+      ysched__trouble ("number" , __LINE__, "not real zero"  , 0, strlen (a_number));
+      return rce;
+   }
+   --rce;  if (x_num <  0) {
+      ysched__trouble ("number" , __LINE__, "negative"       , 0, strlen (a_number));
+      return rce;
+   }
+   /*---(check ranges)-------------------*/
+   --rce;  if (x_num < s_min) {
+      sprintf (e, "too small <%d", s_min);
+      ysched__trouble ("number" , __LINE__, e                , 0, strlen (a_number));
+      return rce;
+   }
+   --rce;  if (x_num > s_max) {
+      sprintf (e, "too large >%d", s_max);
+      ysched__trouble ("number" , __LINE__, e                , 0, strlen (a_number));
+      return rce;
+   }
+   /*---(complete)-----------------------*/
+   return x_num;
 }
 
 char         /*--: interpret constants -------------------[ leaf   [ ------ ]-*/
-ysched__const      (int a_type)
-{ /*---(design rules)--------------------*/
-   /*
-    *  constants are singluar and must be separated with commas
-    *
-    */
-   /*---(locals)-----------+-----------+-*/
-   int         i           = 0;
+ysched__const           (void)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   int         i           =    0;
+   /*---(default)------------------------*/
+   ysched__trouble ("-"      , 0       , "-"              , -1, 0);
+   /*---(defense)------------------------*/
+   --rce;  if (mySCHED.s_epoch <=  0) {
+      ysched__trouble ("const"  , __LINE__, "epoch not set"  , 0, 0);
+      return rce;
+   }
    /*---(look for constants)-------------*/
    while (s_const [i].field [0] != '-') {
       /*---(fast checks)-----------------*/
-      if (s_const [i].field [0] != s_fields [a_type].label [0]) {
+      if (s_const [i].field [0] != s_label [0]) {
          ++i;
          continue;
       }
-      if (s_const [i].label [0] != s_input [0]) {
+      if (s_const [i].label [0] != s_ptr [0]) {
          ++i;
          continue;
       }
       /*---(slow checks)-----------------*/
-      if (strcmp (s_const [i].field, s_fields [a_type].label) != 0) {
+      if (strcmp (s_const [i].field, s_label) != 0) {
          ++i;
          continue;
       }
-      if (strcmp (s_const [i].label, s_input) != 0) {
+      if (strcmp (s_const [i].label, s_ptr) != 0) {
          ++i;
          continue;
       }
@@ -264,90 +565,138 @@ ysched__const      (int a_type)
    /*---(return if none found)-----------*/
    if (s_beg == -1) return 0;
    /*---(complete)-----------------------*/
-   return i;
+   return 1;
 }
 
-int          /*--: interpret number ----------------------[ leaf   [ ------ ]-*/
-ysched__number     (int a_type, char *a_number)
-{ /*---(design rules)--------------------*/
-   /*
-    * positive integers only with no modifiers
-    *
-    */
-   /*---(locals)-----------+-----------+-*/
-   char        rce         = -10;
-   char       *r           = 0;
-   int         x_num       = -1;
-   /*---(defense: null)-----------------*/
-   --rce;  if (a_number [0] == '\0')  return rce;
-   /*---(defense: non-numeric)----------*/
-   r = a_number;
-   --rce;  while (r [0] != NULL) {
-      /*> printf ("verifying %3d:%c\n", r[0], r[0]);                                  <*/
-      if (strchr ("0123456789", r [0]) == NULL)  return rce;
-      ++r;
+
+
+/*====================------------------------------------====================*/
+/*===----                       number ranges                          ----===*/
+/*====================------------------------------------====================*/
+static void      o___RANGES__________________o (void) {;};
+
+char
+ysched__lesser          (void)
+{
+   char        rce         =  -10;
+   int         x_num       =    0;
+   /*---(default)------------------------*/
+   ysched__trouble ("-"      , 0       , "-"              , -1, 0);
+   /*---(defense)------------------------*/
+   --rce;  if (mySCHED.s_epoch <=  0) {
+      ysched__trouble ("lesser" , __LINE__, "epoch not set"  , 0, 0);
+      return rce;
    }
-   /*---(interpret)----------------------*/
-   x_num = atoi (a_number);
-   /*---(denfense: universal)------------*/
-   --rce;  if (x_num == 0 && ! strchr ("0", a_number) == 0)  return rce;
-   --rce;  if (x_num <  0)                                   return rce;
-   /*---(check ranges)-------------------*/
-   --rce;  if (x_num < s_fields [a_type].min)  return rce;
-   --rce;  if (x_num > s_fields [a_type].max)  return rce;
-   /*---(check exceptions)---------------*/
-   --rce;  if (TYPE_DYS)  if (x_num > mySCHED.s_dim) return rce;
-   --rce;  if (TYPE_WKS)  if (x_num > mySCHED.s_wiy) return rce;
-   /*---(complete)-----------------------*/
-   return x_num;
+   /*> printf ("[%s]\n", s_ptr);                                                      <*/
+   --rce;  if (s_ptr [0] != '<') {
+      ysched__trouble ("lesser" , __LINE__, "no lead <"      , 0, 1);
+      return rce;
+   }
+   s_ptr [0] = '\0';
+   ++s_ptr;
+   --rce;  if (s_ptr [0] == '\0') {
+      ysched__trouble ("lesser" , __LINE__, "no base value"  , 0, 1);
+      return rce;
+   }
+   x_num = ysched__number (s_ptr);
+   /*> printf ("[%s]  %d\n", s_ptr, x_num);                                           <*/
+   --rce;  if (x_num <  0) {
+      ysched__trouble (e_func, e_line, e_issue, 1, strlen (s_ptr));
+      return rce;
+   }
+   s_beg = 0;
+   s_end = x_num;
+   return 2;
 }
 
-int          /*--: interpret special day references ------[ leaf   [ ------ ]-*/
-ysched__day        (void)
-{ /*---(design rules)--------------------*/
-   /*---(locals)-----------+-----------+-*/
-   int         rc          = 0;
-   char        rce         = -10;
-   char        x_type      = '-';
-   int         x_day       =  0;
-   int         x_dow       =  0;
-   /*---(check request)------------------*/
-   x_type = s_input [s_len - 1];
-   s_input [s_len - 1] = '\0';
-   rc = ysched__number (PARSE_DYS, s_input);
-   if (rc < 0) {
-      --rce;  if (strcmp ("L", s_input) != 0)  return rce;
-      rc = mySCHED.s_dim;
+char
+ysched__greater         (void)
+{
+   char        rce         =  -10;
+   int         x_num       =    0;
+   /*---(default)------------------------*/
+   ysched__trouble ("-"      , 0       , "-"              , -1, 0);
+   /*---(defense)------------------------*/
+   --rce;  if (mySCHED.s_epoch <=  0) {
+      ysched__trouble ("greater", __LINE__, "epoch not set"  , 0, 0);
+      return rce;
    }
-   x_day = rc;
-   /*---(determine day of week)----------*/
-   x_dow = (((x_day + mySCHED.s_fdow) - 1) % 7);
-   if (x_dow == 0) x_dow = 7;
-   /*---(handle types)-------------------*/
-   switch (x_type) {
-   case 'a' :  /* after type, so push weekends forward  */
-      if (x_dow == 7       )   { x_day += 1; x_dow = 1; }  /* next monday     */
-      if (x_dow == 6       )   { x_day += 2; x_dow = 1; }  /* next monday     */
-      if (x_day >  mySCHED.s_dim)   { x_day -= 3; x_dow = 5; }  /* last friday     */
-      break;
-   case 'b' :  /* before type, so push weekends backward */
-      if (x_dow == 7       )   { x_day -= 2; x_dow = 5; }  /* prev friday     */
-      if (x_dow == 6       )   { x_day -= 1; x_dow = 5; }  /* prev friday     */
-      if (x_day <= 0       )   { x_day += 3; x_dow = 1; }  /* first monday    */
-      break;
-   case 'n' :  /* nearist type, so push sat back and sun forward */
-      if (x_dow == 7       )   { x_day += 1; x_dow = 1; }  /* next monday     */
-      if (x_dow == 6       )   { x_day -= 1; x_dow = 5; }  /* prev friday     */
-      if (x_day >  mySCHED.s_dim)   { x_day -= 3; x_dow = 5; }  /* last friday     */
-      if (x_day <= 0       )   { x_day += 3; x_dow = 1; }  /* first monday    */
-      break;
+   --rce;  if (s_ptr [s_len - 1] != '>') {
+      ysched__trouble ("greater", __LINE__, "no trail >"     , s_len - 1, 1);
+      return rce;
+   }
+   s_ptr [--s_len] = '\0';
+   --rce;  if (s_ptr [0] == '\0') {
+      ysched__trouble ("greater", __LINE__, "no base value"  , 0, 1);
+      return rce;
+   }
+   x_num = ysched__number (s_ptr);
+   /*> printf ("[%s]  %d\n", s_ptr, x_num);                                           <*/
+   --rce;  if (x_num <  0) return rce;
+   s_beg = x_num;
+   s_end = 99;
+   return 2;
+}
+
+char
+ysched__between         (void)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   char       *p           = NULL;
+   int         x_num       =    0;
+   int         n           =    0;
+   /*---(default)------------------------*/
+   ysched__trouble ("-"      , 0       , "-"              , -1, 0);
+   /*---(defense)------------------------*/
+   --rce;  if (mySCHED.s_epoch <=  0) {
+      ysched__trouble ("between", __LINE__, "epoch not set"  , 0, 0);
+      return rce;
+   }
+   p = strchr (s_ptr, '-');
+   --rce;  if (p == NULL) {
+      ysched__trouble ("between", __LINE__, "no infix -"     , 0, 1);
+      return rce;
+   }
+   p [0] = '\0';
+   /*---(beginning)----------------------*/
+   --rce;  if (s_ptr [0] == '\0') {
+      ysched__trouble ("between", __LINE__, "no beg value"   , 0, 1);
+      return rce;
+   }
+   x_num = ysched__number (s_ptr);
+   /*> printf ("[%s]  %d\n", s_ptr, x_num);                                           <*/
+   --rce;  if (x_num <  0) {
+      ysched__trouble (e_func, e_line, e_issue, e_pos, e_len);
+      return rce;
+   }
+   s_beg = x_num;
+   /*---(ending)-------------------------*/
+   n = p - s_ptr;
+   --rce;  if (p [1] == '\0') {
+      ysched__trouble ("between", __LINE__, "no end value"   , n, 1);
+      return rce;
+   }
+   x_num = ysched__number (p + 1);
+   /*> printf ("[%s]  %d\n", p + 1, x_num);                                           <*/
+   --rce;  if (x_num <  0) {
+      ysched__trouble (e_func, e_line, e_issue, n + 1 + e_pos, e_len);
+      s_beg = -1;
+      return rce;
+   }
+   s_end = x_num;
+   /*---(range trouble)------------------*/
+   --rce;  if (s_beg > s_end) {
+      ysched__trouble ("between", __LINE__, "beg value > end", 0, strlen (s_ptr));
+      s_beg = s_end = -1;
+      return rce;
    }
    /*---(complete)-----------------------*/
-   return x_day;
+   return 3;
 }
 
 char         /*--: interpret ranges ----------------------[ ------ [ ------ ]-*/
-ysched__range      (int  a_type)
+ysched__range           (void)
 { /*---(design rules)--------------------*/
    /*
     *  ranges are one of four forms...
@@ -358,213 +707,186 @@ ysched__range      (int  a_type)
     *     na        individual number
     *
     */
-   /*---(locals)-----------+-----------+-*/
-   int         i           = 0;
-   char        rc          = 0;
-   char        rce         = -10;
-   char       *r           = NULL;
-   /*---(handle lesser)------------------*/
-   --rce;
-   if (s_input [0] == '<') {
-      s_input [0] = '\0';
-      rc = ysched__number (a_type, s_input + 1);
-      if (rc >= 0) {
-         s_beg = 0;
-         s_end = rc;
-         return 0;
-      }
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   char        rc          =    0;
+   /*---(default)------------------------*/
+   ysched__trouble ("-"      , 0       , "-"              , -1, 0);
+   /*---(defense)------------------------*/
+   --rce;  if (mySCHED.s_epoch <=  0) {
+      ysched__trouble ("range"  , __LINE__, "epoch not set"  , 0, 0);
       return rce;
+   }
+   /*---(handle lesser)------------------*/
+   --rce;  if (s_ptr [0] == '<') {
+      rc = ysched__lesser  ();
+      if (rc < 0)  return rce;
+      return rc;
    }
    /*---(handle greater)-----------------*/
-   --rce;
-   if (s_input [s_len - 1] == '>') {
-      s_input [s_len - 1] = '\0';
-      rc = ysched__number (a_type, s_input);
-      if (rc >= 0) {
-         s_beg = rc;
-         s_end = 999;
-         return 0;
-      }
-      return rce;
+   --rce;  if (s_ptr [s_len - 1] == '>') {
+      rc = ysched__greater ();
+      if (rc < 0)  return rce;
+      return rc;
+   }
+   /*---(handle between)-----------------*/
+   --rce;  if (strchr (s_ptr, '-') != NULL) {
+      rc = ysched__between ();
+      if (rc < 0)  return rce;
+      return rc;
    }
    /*---(handle postfix)-----------------*/
-   if (strchr ("abn", s_input [s_len - 1]) != NULL) {
-      --rce;  if (a_type != PARSE_DYS)  return rce;
-      rc = ysched__day ();
-      --rce;  if (rc <  0)  return rce;
+   --rce;  if (strchr ("abnABN", s_ptr [s_len - 1]) != NULL) {
+      if (s_type != PARSE_DYS)  return rce;
+      rc = ysched__dow ();
+      if (rc <  0)  return rce;
       s_beg = s_end = rc;
       return 0;
    }
-   /*---(find dash)----------------------*/
-   r = s_input;
-   while (r [0] != NULL) {
-      if (r [0] == '-')  break;
-      ++r;
-   }
-   if (r [0] == '-') {
-      r [0] = '\0';
-      rc = ysched__number (a_type, s_input);
-      --rce;  if (rc <  0)   return rce;
-      s_beg = rc;
-      rc = ysched__number (a_type, r + 1);
-      --rce;  if (rc <  0) { s_beg = -1;  return rce; }
-      s_end = rc;
-      --rce;  if (s_beg > s_end) { s_beg = s_end = -1;  return rce; }
-      return 0;
-   }
    /*---(handle simple value)------------*/
-   rc = ysched__number (a_type, s_input);
+   rc = ysched__number (s_ptr);
    --rce;  if (rc    <  0)                return rce;
    s_beg = s_end = rc;
    --rce;  if (s_stp != 1)                return rce;
    /*---(complete)-----------------------*/
-   return 0;
+   return 1;
 }
 
-char         /*--: apply grammar to array ----------------[ ------ [ ------ ]-*/
-ysched__apply      (int a_type, char *a_array)
+
+
+/*====================------------------------------------====================*/
+/*===----                     main drivers                             ----===*/
+/*====================------------------------------------====================*/
+static void      o___DRIVERS_________________o (void) {;};
+
+char         /*--: interpret one field of grammar --------[ ------ [ ------ ]-*/
+ysched__section    (cchar *a_sect, char *a_array)
 {
-   /*---(locals)-----------+-----------+-*/
-   char        x_mark      = '1';
-   int         x_temp      =  0;
-   int         i           =  0;
-   /*---(check for not)------------------*/
-   if (s_not == 'y')      x_mark = '_';
-   /*---(check for reverse)--------------*/
-   if (s_rev == 'y') {
-      x_temp = s_end;
-      s_end  = s_smax - s_beg;
-      s_beg  = s_smax - x_temp;
-   }
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   char        rc          =    0;
+   char        x_recd      [LEN_RECD]  = "";
    /*---(defense)------------------------*/
-   if (s_beg < s_min )  s_beg = s_min;
-   if (s_end > s_smax)  s_end = s_smax;
-   /*---(update inverse)-----------------*/
-   if (s_inv == 'y') {
-      for (i = s_min ; i <  s_beg; i += s_stp)   a_array [i] = x_mark;
-      for (i = s_smax; i >  s_end; i -= s_stp)   a_array [i] = x_mark;
+   DEBUG_YSCHED yLOG_point   ("a_sect"    , a_sect);
+   --rce;  if (a_sect == NULL      ) {
+      DEBUG_YSCHED yLOG_exitr (__FUNCTION__, rce);
+      return rce;
    }
-   /*---(update normal)------------------*/
-   else {
-      for (i = s_beg ; i <= s_end; i += s_stp)   a_array [i] = x_mark;
+   DEBUG_YSCHED yLOG_info    ("a_sect"    , a_sect);
+   strlcpy (x_recd, a_sect, LEN_RECD);
+   /*---(prepare)------------------------*/
+   rc = ysched__prep     (a_sect);
+   DEBUG_YSCHED yLOG_value   ("prep"      , rc);
+   if (rc <  0) {
+      DEBUG_YSCHED yLOG_exitr (__FUNCTION__, rce);
+      return rce;
    }
-   /*---(get in dots)--------------------*/
-   for (i = 0         ; i <  s_min ; ++i)  a_array [i] = '.';
-   for (i = s_smax + 1; i <= s_max; ++i)  a_array [i] = '.';
-   a_array     [s_max + 1] = '\0';
+   /*---(prefix modifiers)---------------*/
+   rc = ysched__modify ();
+   DEBUG_YSCHED yLOG_value   ("modifier"  , rc);
+   --rce;  if (rc <  0) {
+      DEBUG_YSCHED yLOG_exitr (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(suffix steps)-------------------*/
+   rc = ysched__step     ();
+   DEBUG_YSCHED yLOG_value   ("step"      , rc);
+   --rce;  if (rc <  0)  {
+      DEBUG_YSCHED yLOG_exitr (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(constants)----------------------*/
+   rc = ysched__const    ();
+   DEBUG_YSCHED yLOG_value   ("const"     , rc);
+   --rce;  if (rc < 0) {
+      DEBUG_YSCHED yLOG_exitr (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(ranges)-------------------------*/
+   --rce;  if (rc == 0)  {
+      rc = ysched__range    ();
+      DEBUG_YSCHED yLOG_value   ("range"     , rc);
+      if (rc < 0)  {
+         DEBUG_YSCHED yLOG_exitr (__FUNCTION__, rce);
+         return rce;
+      }
+   }
+   /*---(apply to array)-----------------*/
+   rc = ysched__apply    (a_array);
+   DEBUG_YSCHED yLOG_value   ("apply"     , rc);
+   --rce;  if (rc < 0) {
+      DEBUG_YSCHED yLOG_exitr (__FUNCTION__, rce);
+      return rce;
+   }
    /*---(complete)-----------------------*/
-   return 0;
+   return 1;
 }
 
 char         /*--: interpret one field of grammar --------[ ------ [ ------ ]-*/
-ysched__field      (
-      /*---(parameters)-------+--------+----*/
-      char       *a_input     ,        /* clear ascii text source grammar     */
-      char       *a_array     ,        /* return array of values              */
-      int         a_type      )        /* field type for interpretation       */
+ysched_field       (cchar *a_input, char *a_array, char a_type)
 {
-   /*---(locals)-------------------------*/
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   char        rc          =    0;
+   char        x_recd      [LEN_RECD]  = "";
    char       *p           = NULL;          /* strtok result pointer          */
    char       *q           = ",";           /* strtok delimiter               */
    char       *s           = NULL;          /* strtok context                 */
-   char        rc          = 0;             /* generic return code            */
-   char        rce         = -10;           /* return code for errors         */
-   char        x_label     [ 20];           /* field type label               */
    char       *x_error     = "((error))";   /* default array contents         */
-   int         i           = 0;             /* generic iterator               */
+   int         c           = 0;
    char        x_array     [100];           /* working return values          */
    /*---(header)-------------------------*/
    DEBUG_YSCHED yLOG_enter   (__FUNCTION__);
-   /*---(defense on output array)--------*/
+   /*---(default)------------------------*/
+   if (a_array != NULL)  a_array [0] = '\0';
+   /*---(default)------------------------*/
+   ysched__trouble ("-"      , 0       , "-"              , -1, 0);
+   /*---(defense)------------------------*/
+   --rce;  if (mySCHED.s_epoch <=  0) {
+      ysched__trouble ("number" , __LINE__, "epoch not set"  , 0, 0);
+      return rce;
+   }
    DEBUG_YSCHED yLOG_point   ("*a_array"  , a_array);
    --rce;  if (a_array == NULL      ) {
       DEBUG_YSCHED yLOG_exitr (__FUNCTION__, rce);
       return rce;
    }
    DEBUG_YSCHED yLOG_value   ("a_type"    , a_type);
-   --rce;  if (a_type  >= MAX_FIELDS)  {
+   rc = ysched__limits   (a_type);
+   DEBUG_YSCHED yLOG_value   ("limits"    , rc);
+   --rce;  if (rc < 0) {
       DEBUG_YSCHED yLOG_exitr (__FUNCTION__, rce);
       return rce;
    }
-   --rce;  if (a_type  <  PARSE_MNS)  {
-      DEBUG_YSCHED yLOG_exitr (__FUNCTION__, rce);
-      return rce;
-   }
-   --rce;  if (a_type  >  PARSE_YRS) {
-      DEBUG_YSCHED yLOG_exitr (__FUNCTION__, rce);
-      return rce;
-   }
-   DEBUG_YSCHED yLOG_point   ("*a_input"  , a_input);
-   --rce;  if (a_input == NULL      )  {
+   DEBUG_YSCHED yLOG_point   ("a_input"   , a_input);
+   --rce;  if (a_input == NULL)  {
       /*---(check for defaulting)-----------*/
       if (a_type == PARSE_WKS || a_type == PARSE_YRS) {
-         DEBUG_YSCHED yLOG_note  ("requested wks or yrs");
-         ysched__prep     (a_type);
-         s_beg = s_min;
-         s_end = s_smax;
-         ysched__apply    (a_type, x_array);
-         strcpy (a_array , x_array);
-         strcpy (mySCHED.last, a_array);
-         DEBUG_YSCHED yLOG_exit  (__FUNCTION__);
-         return 0;
+         strlcpy (x_recd, "*", LEN_RECD);
+      } else {
+         DEBUG_YSCHED yLOG_exitr (__FUNCTION__, rce);
+         return rce;
       }
-      DEBUG_YSCHED yLOG_exitr (__FUNCTION__, rce);
-      return rce;
+   } else {
+      strlcpy (x_recd, a_input, LEN_RECD);
    }
-   DEBUG_YSCHED yLOG_info    ("a_input"   , a_input);
+   DEBUG_YSCHED yLOG_point   ("x_recd"    , x_recd);
    /*---(initialize arrays)--------------*/
-   strcpy (a_array , x_error);
-   strcpy (mySCHED.last, a_array);
-   DEBUG_YSCHED yLOG_info    ("default"   , a_array);
-   for (i = 0; i < LEN_HUND; ++i) x_array   [i]    = '_';
+   strcpy (mySCHED.last, x_error);
+   rc = ysched__empty (x_array);
    DEBUG_YSCHED yLOG_info    ("initial"   , x_array);
    /*---(parse into sections)------------*/
-   p = strtok_r (a_input, q, &s);
+   p = strtok_r (x_recd, q, &s);
    --rce;
    while (p != NULL) {
-      s_input =  p;
-      DEBUG_YSCHED yLOG_info    ("s_input"   , s_input);
-      s_len = strlen (s_input);
-      DEBUG_YSCHED yLOG_value   ("s_len"     , s_len);
-      rc = ysched__prep     (a_type);
-      DEBUG_YSCHED yLOG_value   ("prep_rc"   , rc);
+      rc = ysched__section (p, x_array);
+      DEBUG_YSCHED yLOG_value   ("section"   , rc);
       if (rc <  0) {
-         DEBUG_YSCHED yLOG_exitr (__FUNCTION__, rce);
-         return rce;
-      }
-      rc = ysched__modifier ();
-      DEBUG_YSCHED yLOG_value   ("mod_rc"    , rc);
-      if (rc <  0) {
-         DEBUG_YSCHED yLOG_exitr (__FUNCTION__, rce);
-         return rce - 1;
-      }
-      rc = ysched__step     ();
-      DEBUG_YSCHED yLOG_value   ("step_rc"   , rc);
-      if (rc <  0)  {
-         DEBUG_YSCHED yLOG_exitr (__FUNCTION__, rce);
-         return rce - 2;
-      }
-      rc = ysched__const    (a_type);
-      DEBUG_YSCHED yLOG_value   ("const_rc"  , rc);
-      --rce;  if (rc < 0) {
-         DEBUG_YSCHED yLOG_exitr (__FUNCTION__, rce);
-         return rce;
-      }
-      if (rc == 0)  {
-         rc = ysched__range    (a_type);
-         DEBUG_YSCHED yLOG_value   ("range_rc"  , rc);
-         --rce; if (rc < 0)  {
-            DEBUG_YSCHED yLOG_exitr (__FUNCTION__, rce);
-            return rce;
-         }
-      }
-      rc = ysched__apply    (a_type, x_array);
-      DEBUG_YSCHED yLOG_value   ("apply_rc"  , rc);
-      --rce;  if (rc < 0) {
          DEBUG_YSCHED yLOG_exitr (__FUNCTION__, rce);
          return rce;
       }
       p = strtok_r (NULL, q, &s);
+      ++c;
    }
    /*---(move to final)------------------*/
    strcpy (a_array , x_array);
@@ -572,73 +894,9 @@ ysched__field      (
    DEBUG_YSCHED yLOG_info    ("final"     , a_array);
    /*---(complete)-----------------------*/
    DEBUG_YSCHED yLOG_exit    (__FUNCTION__);
-   return 0;
+   return c;
 }
 
-int
-ysched_duration         (char *a_input)
-{
-   /*---(locals)-----------+-----+-----+-*/
-   char        rce         =  -10;
-   char        rc          =    0;
-   char        x_input     [LEN_HUND];
-   int         x_len       =    0;
-   char        x_unit      =  '-';
-   char       *x_units     = "smthd";
-   char       *x_nums      = "0123456789.";
-   float       x_mult      =    1;
-   float       x_mins      =    0;
-   int         i           =    0;
-   /*---(header)-------------------------*/
-   DEBUG_YSCHED yLOG_enter   (__FUNCTION__);
-   /*---(defenses)-----------------------*/
-   DEBUG_YSCHED yLOG_point   ("a_input"   , a_input);
-   --rce;  if (a_input == NULL) {
-      DEBUG_YSCHED yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   strncpy (x_input, a_input, LEN_HUND);
-   x_len = strlen (x_input);
-   DEBUG_YSCHED yLOG_point   ("x_len"     , x_len);
-   --rce;  if (x_len <= 0) {
-      DEBUG_YSCHED yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   /*---(check for units)----------------*/
-   x_unit = x_input [x_len - 1];
-   DEBUG_YSCHED yLOG_char    ("x_unit"    , x_unit);
-   DEBUG_YSCHED yLOG_info    ("x_units"   , x_units);
-   --rce;  if (strchr (x_units, x_unit) != NULL) {
-      switch (x_unit) {
-      case  's' : x_mult = 1.0 / 60.0;   break;
-      case  'm' : x_mult = 1.0;          break;
-      case  't' : x_mult = 10.0;         break;
-      case  'h' : x_mult = 60.0;         break;
-      case  'd' : x_mult = 480.0;        break;
-      }
-      x_input [--x_len] = '\0';
-   }
-   /*---(check remaining string)---------*/
-   --rce;  for (i = 0; i < x_len; ++i) {
-      if (strchr (x_nums, x_input [i]) == NULL) {
-         DEBUG_YSCHED yLOG_exitr   (__FUNCTION__, rce);
-         return rce;
-      }
-   }
-   /*---(convert number)-----------------*/
-   x_mins   = atof (x_input);
-   DEBUG_YSCHED yLOG_double  ("x_mins"    , x_mins);
-   --rce;  if (x_mins < 0) {
-      DEBUG_YSCHED yLOG_exitr   (__FUNCTION__, rce);
-      return rce;
-   }
-   DEBUG_YSCHED yLOG_double  ("x_mult"    , x_mult);
-   x_mins *= x_mult;
-   DEBUG_YSCHED yLOG_double  ("x_mins"    , x_mins);
-   /*---(complete)-----------------------*/
-   DEBUG_YSCHED yLOG_exit    (__FUNCTION__);
-   return (int) x_mins;
-}
 
 
 

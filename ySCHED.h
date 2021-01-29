@@ -124,13 +124,15 @@ struct  cSCHED
    char      dow   [LEN_TERSE];       /* day of week       1-7                */
    char      wks   [LEN_LONG];        /* week of year      1-53               */
    char      yrs   [LEN_LONG];        /* years             1-50               */
-   int       dur;                     /* duration in minutes                  */
    char      eff   [LEN_EFF];         /* effective range (-100 to +365 days)  */
 };
 
 typedef    const int      cint;
 typedef    const short    cshort;
 typedef    const char     cchar;
+typedef    unsigned char  uchar;
+typedef    unsigned short ushort;
+typedef    unsigned long  ulong;
 
 
 /*===[[ PUBLIC FUNCTIONS ]]===============================*/
