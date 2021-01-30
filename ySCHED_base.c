@@ -34,6 +34,7 @@ char      ySCHED_ver   [100];
  *> }                                                                                   <*/
 
 
+char  s_raw       [LEN_RECD]  = "";
 char  s_section   [LEN_HUND]  = "";
 char  s_input     [LEN_HUND]  = "";
 char *s_ptr       = NULL;
@@ -47,7 +48,6 @@ char  s_flp       =  '-';
 int   s_stp       =    1;
 int   s_beg       =    0;
 int   s_end       =    0;
-
 
 char  s_type      =   -1;
 char  s_label     [LEN_LABEL] = "";
@@ -242,6 +242,7 @@ ySCHED_parse       (tSCHED *a_sched, cchar *a_recd)
    DEBUG_YSCHED  yLOG_enter   (__FUNCTION__);
    /*---(initialize)---------------------*/
    ySCHED__init ();
+   ysched_reseterror ();
    /*---(defense)------------------------*/
    if (a_recd == NULL || a_recd[0] == '\0' || a_recd[0] == ' ' || a_recd[0] == '#') {
       ySCHED__effinit ();
@@ -249,6 +250,7 @@ ySCHED_parse       (tSCHED *a_sched, cchar *a_recd)
       return mySCHED.status;
    }
    /*---(copy it)------------------------*/
+   strncpy (s_raw       , a_recd, LEN_RECD);
    strncpy (mySCHED.full, a_recd, LEN_RECD);
    strncpy (x_recd      , a_recd, LEN_RECD);
    /*---(process speciality)-------------*/
@@ -269,7 +271,7 @@ ySCHED_parse       (tSCHED *a_sched, cchar *a_recd)
       return mySCHED.status;
    }
    /*---(break it down)------------------*/
-   strncpy(mySCHED.recd, mySCHED.full, LEN_RECD);
+   strncpy (mySCHED.recd, mySCHED.full, LEN_RECD);
    mySCHED.xmin  = strtok (mySCHED.recd  , " ");
    mySCHED.xhrs  = strtok (NULL          , " ");
    mySCHED.xdys  = strtok (NULL          , " ");
@@ -279,13 +281,18 @@ ySCHED_parse       (tSCHED *a_sched, cchar *a_recd)
    mySCHED.xyrs  = strtok (NULL          , " ");
    /*---(parse)--------------------------*/
    rc = 0;
-   rc = ysched_field  (mySCHED.xmin, g_sched.min, PARSE_MNS);
-   rc = ysched_field  (mySCHED.xhrs, g_sched.hrs, PARSE_HRS);
-   rc = ysched_field  (mySCHED.xdys, g_sched.dys, PARSE_DYS);
-   rc = ysched_field  (mySCHED.xmos, g_sched.mos, PARSE_MOS);
-   rc = ysched_field  (mySCHED.xdow, g_sched.dow, PARSE_DOW);
-   rc = ysched_field  (mySCHED.xwks, g_sched.wks, PARSE_WKS);
-   rc = ysched_field  (mySCHED.xyrs, g_sched.yrs, PARSE_YRS);
+   if (rc >= 0)  rc = ysched_field  (mySCHED.xmin, g_sched.min, PARSE_MNS);
+   if (rc >= 0)  rc = ysched_field  (mySCHED.xhrs, g_sched.hrs, PARSE_HRS);
+   if (rc >= 0)  rc = ysched_field  (mySCHED.xdys, g_sched.dys, PARSE_DYS);
+   if (rc >= 0)  rc = ysched_field  (mySCHED.xmos, g_sched.mos, PARSE_MOS);
+   if (rc >= 0)  rc = ysched_field  (mySCHED.xdow, g_sched.dow, PARSE_DOW);
+   if (rc >= 0)  rc = ysched_field  (mySCHED.xwks, g_sched.wks, PARSE_WKS);
+   if (rc >= 0)  rc = ysched_field  (mySCHED.xyrs, g_sched.yrs, PARSE_YRS);
+   ysched_fancify ();
+   --rce;  if (rc < 0) {
+      DEBUG_YSCHED  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
    strncpy (g_sched.eff, mySCHED.effective, 500);
    DEBUG_YSCHED  yLOG_info  ("effective", mySCHED.effout);
    /*---(copy back)----------------------*/

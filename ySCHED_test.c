@@ -44,8 +44,7 @@ ysched__accessor   (char *a_question)
       sprintf (s, "%2d[%-.20s]", strlen (s_ptr  ), s_ptr  );
       sprintf(unit_answer, "section        : %-24.24s  %2db  %2de  %c!  %c^  %c~  %2d/  %s", t, s_beg, s_end, s_not, s_rev, s_inv, s_stp, s);
    } else if (strcmp(a_question, "trouble"      ) == 0) {
-      sprintf (t, "[%.45s]", e_fancy);
-      sprintf(unit_answer, "trouble  (%3d) : %-7.7s, %-15.15s %4d %2d %s", e_line, e_func, e_issue, e_pos, e_len, t);
+      sprintf(unit_answer, "trouble  (%3d) : %-7.7s, %-20.20s   %4d   %4d   %4d   %4d", e_line, e_func, e_issue, e_pos, e_len, e_field, e_section);
    } else if (strcmp(a_question, "step"         ) == 0) {
       sprintf(unit_answer, "step           : %d", s_stp);
    } else if (strcmp(a_question, "modifiers"    ) == 0) {

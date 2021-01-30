@@ -27,8 +27,8 @@
 
 #define     P_VERMAJOR  "1.--, in production and general use"
 #define     P_VERMINOR  "1.4-, clean, rework, and expand testing"
-#define     P_VERNUM    "1.4c"
-#define     P_VERTXT    "broke out field parsing, deeper unit testing, error reporting"
+#define     P_VERNUM    "1.4d"
+#define     P_VERTXT    "error reporting handles complex inputs and fancy output"
 
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
@@ -144,6 +144,7 @@ char *strtok_r (char*, cchar*, char**);
 int   isdigit  (int);
 
 
+extern char  s_raw     [LEN_RECD];
 extern char  s_section [LEN_HUND];
 extern char  s_input   [LEN_HUND];
 extern char *s_ptr;
@@ -166,6 +167,8 @@ extern int   s_min;
 extern int   s_tmax;
 extern int   s_max;
 
+extern int   e_field;
+extern int   e_section;
 extern char  e_func      [LEN_LABEL];
 extern int   e_line;
 extern char  e_issue     [LEN_DESC];
@@ -183,21 +186,31 @@ char        ysched_date__dow_1st    (void);
 char        ysched_date__max_days   (void);
 char        ysched_date__max_weeks  (void);
 
+/*---(errors)---------------*/
+char        ysched_reseterror       (void);
+char        ysched__trouble         (int *a_func, int a_line, char *a_issue, int a_pos, int a_len);
+char        ysched_fancify          (void);
+/*---(support)--------------*/
 char        ysched__limits          (char a_type);
 char        ysched__prep            (char *p);
-int         ysched__number          (cchar *a_number);
+char        ysched__empty           (char *a_array);
+char        ysched__apply           (char *a_array);
+/*---(mods)-----------------*/
 char        ysched__modify          (void);
 char        ysched__step            (void);
+int         ysched__dow             (void);
+/*---(values)---------------*/
+int         ysched__number          (cchar *a_number);
+char        ysched__const           (void);
+/*---(range)----------------*/
 char        ysched__lesser          (void);
 char        ysched__greater         (void);
 char        ysched__between         (void);
-int         ysched__dow             (void);
 char        ysched__range           (void);
-char        ysched__const           (void);
-char        ysched__empty           (char *a_array);
-char        ysched__apply           (char *a_array);
+/*---(drivers)--------------*/
 char        ysched__section         (cchar *a_sect, char *a_array);
 char        ysched_field            (cchar *a_input, char *a_array, char a_type);
+/*---(done)-----------------*/
 
 
 
