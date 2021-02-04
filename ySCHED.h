@@ -115,8 +115,8 @@
 typedef struct cSCHED  tSCHED;
 struct  cSCHED
 {
-   long      epoch;                   /* validity (year, month, and day only) */
-   char      raw   [LEN_FULL];        /* raw scheduling grammar text          */
+   long      epoch;                   /* validity (ymd at 00:00 time)         */
+   char     *raw;                     /* raw scheduling grammar text          */
    char      min   [LEN_LONG];        /* minutes           0-59               */
    char      hrs   [LEN_TITLE];       /* hours             0-23               */
    char      dys   [LEN_DESC];        /* days of month     1-31               */
@@ -124,7 +124,10 @@ struct  cSCHED
    char      dow   [LEN_TERSE];       /* day of week       1-7                */
    char      wks   [LEN_LONG];        /* week of year      1-53               */
    char      yrs   [LEN_LONG];        /* years             1-50               */
-   char      eff   [LEN_EFF];         /* effective range (-100 to +365 days)  */
+   long      last;                    /* last test epoch                      */
+   char      beg   [LEN_TERSE];       /* effective beginning (ymd at 00:00)   */
+   char      end   [LEN_TERSE];       /* effective ending (ymd at 00:00)      */
+   char      eff   [LEN_EFF];         /* valid range (-100 to +365 days)      */
 };
 
 typedef    const int      cint;
@@ -141,8 +144,12 @@ typedef    unsigned long  ulong;
 char*       ySCHED_version          (void);
 char        ySCHED_reset            (void);
 
-char        ySCHED_setdate          (short a_year, char a_month, char a_day);
+char        ySCHED_date             (cchar a_year, cchar a_month, cchar a_day);
+char        ySCHED_epoch            (long  a_epoch);
+
 char        ySCHED_parse            (tSCHED *a_sched, cchar *a_recd);
+char        ySCHED_trouble          (int *a_line, char *a_focus, char *a_issue, int *a_beg, int *a_len, char *a_fancy);
+
 char        ySCHED_test             (tSCHED *a_sched, int a_hour, int a_minute);
 
 char        ySCHED_save             (tSCHED *a_sched);

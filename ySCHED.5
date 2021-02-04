@@ -1,0 +1,170 @@
+.TH ySCHED 5 2011-Aug "linux" "configuration, data, and files"
+
+.SH NAME
+.B ySCHED
+\- simple, elegant, and powerful kernighan scheduling grammar
+
+.SH PATRON
+.B eunomia-horae
+(good order) goddess of law and appropriate time
+
+.SH IMAGERY
+beautiful, rose-bloomed maiden, sister of justice, peace, and fortune
+
+.SH SUMMARY
+ySCHED is a simple, elegant, powerful, and extended kernighan scheduling
+grammar that builds on the classic cron implementation to enable support of
+all schedule-based application (like calendaring).
+
+.SH DOCUMENTATION
+.nf
+ySCHED (3)         application programming interface
+.nf
+ySCHED (5)   [***] configuration, data, and files
+.nf
+ySCHED (7)         overview, objectives, and decision rationale
+
+.SH VALID DATES
+many scheduled jobs are added, removed, or transitioned at scheduled times,
+rather than immediately.  rather than paying a programmer to remember and wait,
+an administrator can use validity dates.
+
+.B general layout
+is...
+   1) .valid       fixed header
+   2) start        yy.mm.dd or < which means dawn-of-time
+   3) end          yy.mm.dd or > which means end-of-time
+
+this record effects all the following scheduled entries.  there can be multiple
+entries in a file.  a file with no entries means valid forever.
+
+.B examples...
+   .valid  20.02.10 20.04.10   between two dates (inclusive)
+   .valid  20.01.01 >          from Jan 1th, 2020 on
+   .valid  < 22.07.13          up until Jul 13th, 2022
+   .valid  < >                 always and forever
+
+.SH SCHEDULING INPUT FORMAT
+each input record contains a
+.B kernighan scheduling string
+which is independently parsable and is pure
+.B 8bit ascii
+text made up of
+.B 5 to 7 fields
+delimited by any number of spaces.
+
+the
+.B general layout
+of the string is
+.B seven fields,
+but the last two are optional, meaning using fields 1-5, 1-6, or 1-7 are all legal.
+   1) minutes      0 - 59 minutes
+   2) hours        0 - 23 hours
+   3) days         1 - 28/31 days, depending on month
+   4) months       1 - 12 months
+   5) week days    1 (monday) to 7 (sunday)
+   6) weeks        0 to 53 weeks of the year, depending on year
+   7) years        0 (2000) to 50 (2050)
+
+.B basic examples, explained below...
+   #min-- -hrs-- day--- mon--- dow--- wks---
+   *      *      *      *      *      *      every min of every day
+   0      2      *      *      *      *      2am every day
+   0      0      1      *      *      *      midnight on the first
+   10     *      *      *      *      *      10min after every hour
+   30     8,17   *      *      *      *      8:30a and 5:30p
+   12     8      4      7      *      *      july 4th at 8:12am
+   0      20     *      *      Mo,Th  *      every mon/thu at 8pm
+   0,30   8-17   *      *      *      *      half hours from 8a to 5p
+   0      12     *      *      Mo     *      noon every monday
+   0      20     *      *      Fr     1      8p fri of 1st full week
+   0      0      31     *      *      *      midnight on jan 31st
+   0      0      */2    *      *      *      midnight every other day
+   0      3-9/3  *      *      *      *      3a, 6a, and 9a
+   0      15     *      *      *      */2    3p very other week
+
+.SH FIELD CONTENTS
+schedules are defaulted as empty or never, unless a value is specifically
+declared.
+
+.B single values
+are a way to be very specific about turning a exact time on or off.  there are
+four types of single value entries -- normal, not, reverse, inverse.
+
+   1) normal        10       specifically turns 10 on
+   2) not           !10      specifically turns 10 off
+   3) reverse       ^10      specifically turns max - 10 on
+   4) inverse       ~10      specifically turns all on except 10
+
+.B ranges
+are a quick shorthand to designate a continuous range of values, rather than
+list them.  there are four types of ranges -- lesser, greater, between, and
+wildcard.  all ranges are inclusive, meaning the literal numbers are included.
+
+  1) lesser         <10      all values less that or equal to 10
+  2) greater        22>      all values greater that or equal to 22
+  3) between        5-17     all values between 5 and 17, inclusive
+  4) wildcard       *        all legal values
+  -) not            !<5      turn of the first six
+  -) reverse        ^0-4     turn on the last five
+  -) inverse        ~5-17    all except 5-17
+
+.B multiple values
+are a way of turning on several different values in a particular field.  this
+is done by separating with commas.
+
+   1) values        10,12    turn on both 10 and 12
+   2) mixed         5-8,15   turn on 5, 6, 7, 8, and 15
+   -) not           5-8,!6-7 turn on 5 and 8 (6, 7 forced off)
+   -) reverse       0-4,^0-4 turn on the first and last five
+
+.B steps
+are a way to jump through a ist, like with increments in c-for statements.
+
+   1) ranges        3-9/3    jumps by 3x, so 3, 6, and 9
+   2) wildcards     */4      means 1, 5, 9, 13, ... up to max
+   -) not           !6-10/2  turn off 6, 8, and 10
+
+.B nearest
+is a way to ensure a week day or a weekend day.  if the week day options are
+already on a week day, the date is unchanged.  same for the weekend versions.
+   1) week day before       15b   first week day before 15th
+   2) week day after        20a   first week day after the 20th
+   3) week day nearest      7n    nearest week day to the 7th
+   4) weekend day before    12B   first sunday before 12th
+   5) weekend day after     5A    first saturday after the 5th
+   6) weekend day nearest   2N    nearest weekend day to the 2nd
+
+.B constants
+are names for commonly used values and ranges to make them easier to read.
+
+   hours...
+      W    Work     8-16       8a  - 5p
+      O    Off      ~8-16      5p  - 8a
+      B    Batch    ~5-22      10p - 5a
+
+   days...
+      1w,2w,3w,4w,5w (blocks of 7 days, not perfect Mo-Su)
+      Lw   last 7 days of month
+      Ld   last day of the month
+
+   months...
+      Jan,Feb,...Nov,Dec
+      1q,2q,3q,4q,Lq (quarters)
+      1h,2h (halves)
+
+   days-of-week...
+      Mo,Tu,We,Th,Fr,Sa,Su
+      W    Work     1-5        Mo - Fr
+      O    Off      6-7        Sa - Su
+
+   weeks of the year
+      Lw   last full week of the year
+
+.SH AUTHOR
+jelloshrike at gmail dot com
+
+.SH COLOPHON
+this page is part of a documentation package meant to make use of the
+heatherly tools easier and faster.
+

@@ -1,62 +1,51 @@
-." heatherly hand crafted (like a dope)
-."
-." sections, break up the document into pieces
-."   .SH <str>   begin a new section
-."   .SS <str>   begin a new sub-section
-."
-." paragraphs, if not special formatting is used, these are unnecessary
-."   .PP         before a set of contiguous lines will run them together into
-."               a single paragraph -- helps if macros separate by accident
-."   .RS <n>     start a paragraph indented by <n> characters (i use 3 mostly)
-."   .RE         end that relative paragraph
-."   .IP <str>   uses <str> as an outdent and the next line is indented
-."   .TP         tag paragraph which has a more controllable outdent than .IP
-."   .HP         start hanging paragraph where all following lines are indented
-."
-."
-."
-."
-."
-
-
-.TH ySCHED 3 2011-Aug "linux" "heatherly custom tools manual"
-
+.TH ySCHED 3 2011-Aug "linux" "application programming interface"
 
 .SH NAME
-ySCHED \- simple, elegant, and powerful kernighan scheduling grammar
+.B ySCHED
+\- simple, elegant, and powerful kernighan scheduling grammar
+
+.SH PATRON
+.B eunomia-horae
+(good order) goddess of law and appropriate time
+
+.SH IMAGERY
+beautiful, rose-bloomed maiden, sister of justice, peace, and fortune
+
+.SH SUMMARY
+ySCHED is a simple, elegant, powerful, and extended kernighan scheduling
+grammar that builds on the classic cron implementation to enable support of
+all schedule-based application (like calendaring).
+
+.SH DOCUMENTATION
+.nf
+ySCHED (3)   [***] application programming interface
+.nf
+ySCHED (5)         configuration, data, and files
+.nf
+ySCHED (7)         overview, objectives, and decision rationale
+
 .SH SYNOPSIS
 .nf
 .B #include  <ySCHED.h>
 .sp
-.R  ---preparation---------------------------------
-.R  set a specific date for evaluating entries...
-.BI "char  ySCHED_setdate ( int " "a_year" ", int " "a_month" ", int " "a_day" " );"
-.sp
-.R  clear out global effective dates before each file is read...
-.BI "char  ySCHED_reset   ( void );"
-.sp
-.R  ---evaluation----------------------------------
-.R  parse a scheduling grammar string into current values...
-.BI "char  ySCHED_parse   ( char* " "a_recd" " );"
-.sp
-.R  test the current parsed record at a specific time...
-.BI "int   ySCHED_test    ( int " "a_hour" ", int " "a_minute" " );"
-.sp
-.R  ---storage-------------------------------------
-.R  saving the most recent parsed record to a structure...
-.BI "char  ySCHED_save    ( tSCHED* " "a_sched" " );"
-.sp
-.R  loading ySCHED from a saved set of values...
-.BI "char  ySCHED_load    ( tSCHED* " "a_sched" " );"
-.sp
-.R  ---unit testing--------------------------------
-.R  return library versioning information...
+===(( overall ))===============================
 .BI "char* ySCHED_version     (void);"
+
+===(( primary ))===============================
+.BI "char  ySCHED_setdate     (short   " "year " ", char   " "month" ", char   " "day  " ");"
+.BI "char  ySCHED_parse       (tSCHED *" "sched" ", char  *" "recd " ");"
+.BI "char  ySCHED_test        (tSCHED *" "sched" ", char   " "hour " ", char   " "min  "  ");"
+
+===(( debugging ))=============================
+.BI "char  ySCHED_trouble     (char   *" "area " ", char  *" "issue" ", char  *" "fancy" ");"
+
 .sp
-.R  set debugging mode
-.BI "char  ySCHED_debug       (char a_flag);"
-.sp
-.B link with -L/usr/local/libs -lySCHED or -lySCHED_debug
+.B link with -L/usr/local/lib, and either -lySCHED or -lySCHED_debug
+
+
+
+
+
 
 
 .SH OVERVIEW
@@ -242,7 +231,7 @@ enforced.
 .B hours field...
     Work, W    8a to 4p
     Off, O     5p to 7a
-    Batch      11p to 4a (typical batch window)
+    Batch, B   11p to 4a (typical batch window)
     Dawn       5a to 7a
     Morning    8a to 10a
     Midday     11a to 1p
@@ -256,7 +245,7 @@ enforced.
 
 .B days field...
     Ld         last day of the month
-    1w         1st seven days
+    1w         1st seven days (not Mo - Sun)
     2w         2nd seven days
     3w         3rd seven days
     4w         4th seven days
@@ -278,8 +267,8 @@ enforced.
 
 .B days of the week...
     Mo, Tu, ..., Su
-    Work, B    work days, meaning Mo - Fr
-    Off, E     weekends, meaning Sa and Su
+    Work, W    work days, meaning Mo - Fr
+    Off, O     weekends, meaning Sa and Su
 
 .B examples...
 

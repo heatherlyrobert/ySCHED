@@ -4,6 +4,48 @@
 #include   "ySCHED_priv.h"
 
 
+char       /*--> test for a specific timing ----------------------------------*/
+ySCHED_test        (tSCHED *a_sched, int a_hour, int a_minute)
+{
+   /*---(locals)-----------+-----+-----+-*/
+   char        rce         =  -10;
+   tSCHED     *x_sched     = NULL;
+   /*---(check location)-----------------*/
+   if (a_sched == NULL)  x_sched = &g_sched;
+   else                  x_sched = a_sched;
+   /*---(effective)----------------------*/
+   if (x_sched->eff [100 + mySCHED.s_off] == '_') {
+      return 0;
+   }
+   /*---(based on setdate)---------------*/
+   if (x_sched->wks [mySCHED.s_woy]  == '_') {
+      return 0;
+   }
+   if (x_sched->mos [mySCHED.s_month]  == '_') {
+      return 0;
+   }
+   if (x_sched->dow [mySCHED.s_dow]  == '_' || x_sched->dys [mySCHED.s_day]  == '_') {
+      return 0;
+   }
+   /*---(hours)--------------------------*/
+   if (a_hour   != ySCHED_ANY && x_sched->hrs [a_hour    ]  == '_') {
+      return 0;
+   }
+   if (a_hour   == ySCHED_ANY && strchr (x_sched->hrs, '1') == NULL) {
+      return 0;
+   }
+   /*---(minutes)------------------------*/
+   if (a_minute != ySCHED_ANY && x_sched->min [a_minute  ]  == '_') {
+      return 0;
+   }
+   if (a_minute == ySCHED_ANY && strchr (x_sched->min, '1') == NULL) {
+      return 0;
+   }
+   /*---(complete)-----------------------*/
+   /*> return x_sched->dur;                                                           <*/
+   return 1;
+}
+
 
 /*====================------------------------------------====================*/
 /*===----                         unit testing                         ----===*/
@@ -22,17 +64,17 @@ ysched__accessor   (char *a_question)
    strncpy(unit_answer, "unknown request", 100);
    if        (strcmp(a_question, "curr_date"    ) == 0) {
       sprintf (unit_answer, "current date   : ");
-      if (mySCHED.s_month == 0)  sprintf (t, "  ·y,  ·m,  ·d / ");
-      else                    sprintf (t, "%3dy, %2dm, %2dd / ", mySCHED.s_year, mySCHED.s_month, mySCHED.s_day);
+      if (mySCHED.s_month == 0)  sprintf (t, " ·y  ·m  ·d  · · · · · · ");
+      else                       sprintf (t, "%2dy %2dm %2dd %10ld %c ", mySCHED.s_year, mySCHED.s_month, mySCHED.s_day, mySCHED.s_epoch, (mySCHED.s_dst == 0) ? '·' : 'y');
       strcat (unit_answer, t);
-      if (mySCHED.s_dow == 0)  sprintf (t, "·dow,  ·dim,   ·diy,   ·doy / ");
-      else                    sprintf (t, "%1ddow, %2ddim, %3ddiy, %3ddoy / ", mySCHED.s_dow, mySCHED.s_dim, mySCHED.s_diy, mySCHED.s_doy);
+      if (mySCHED.s_dow == 0)    sprintf (t, "·dow  ·dim   ·diy   ·doy");
+      else                       sprintf (t, "%1ddow %2ddim %3ddiy %3ddoy", mySCHED.s_dow, mySCHED.s_dim, mySCHED.s_diy, mySCHED.s_doy);
       strcat (unit_answer, t);
-      if (mySCHED.s_wiy == 0)  sprintf (t, "·fdow, ·wze,  ·wiy,  ·woy / ");
-      else                    sprintf (t, "%1dfdow, %1dwze, %2dwiy, %2dwoy / ", mySCHED.s_fdow, mySCHED.s_wze, mySCHED.s_wiy, mySCHED.s_woy);
+      if (mySCHED.s_off == 0)    sprintf (t, "    ·off / ");
+      else                       sprintf (t, " %4doff / ", mySCHED.s_off);
       strcat (unit_answer, t);
-      if (mySCHED.s_off == 0)  sprintf (t, "   ·off");
-      else                    sprintf (t, "%4doff", mySCHED.s_off);
+      if (mySCHED.s_wiy == 0)    sprintf (t, "·fdow ·wze  ·wiy  ·woy");
+      else                       sprintf (t, "%1dfdow %1dwze %2dwiy %2dwoy", mySCHED.s_fdow, mySCHED.s_wze, mySCHED.s_wiy, mySCHED.s_woy);
       strcat (unit_answer, t);
    } else if (strcmp(a_question, "parsed"       ) == 0) {
       sprintf(unit_answer, "parsed freq    : %.35s", mySCHED.last);
@@ -54,7 +96,7 @@ ysched__accessor   (char *a_question)
    } else if (strcmp(a_question, "limits"       ) == 0) {
       sprintf(unit_answer, "limits    (%2d) : %-12.12s  min %3d to %-3d max -- tmax %d", s_type, s_label, s_min, s_max, s_tmax);
    } else if (strcmp(a_question, "effective"    ) == 0) {
-      sprintf(unit_answer, "effective      : %.35s", mySCHED.effout);
+      sprintf(unit_answer, "effective      : %-8.8s %s %-8.8s", g_sched.beg, mySCHED.effout, g_sched.end);
    } else if (strcmp(a_question, "minutes"      ) == 0) {
       sprintf(unit_answer, "min : %.65s", g_sched.min);
    } else if (strcmp(a_question, "hours"        ) == 0) {
@@ -84,7 +126,7 @@ ysched__unit_quiet     (void)
 }
 
 char       /*----: set up program urgents/debugging --------------------------*/
-ysched__unit__loud    (void)
+ysched__unit_loud     (void)
 {
    yLOGS_begin ("ySCHED" , YLOG_SYS, YLOG_NOISE);
    yURG_name  ("kitchen"      , YURG_ON);

@@ -57,9 +57,6 @@ int   s_max       =    0;
 
 
 
-char       /*----: update effective for a endpoint dates ---------------------*/
-ySCHED__effend     (char *a_date, char a_side, long a_now);
-
 /*====================------------------------------------====================*/
 /*===----                           utility                            ----===*/
 /*====================------------------------------------====================*/
@@ -109,6 +106,8 @@ ySCHED__init       (void)
       g_sched.wks [i]    = '_';
    }
    /*---(effective)----------------------*/
+   strlcpy (g_sched.beg, "00.01.01", LEN_TERSE);
+   strlcpy (g_sched.end, "50.01.01", LEN_TERSE);
    for (i = 0; i < 500      ; ++i) {
       g_sched.eff [i]    = '_';
    }
@@ -130,7 +129,7 @@ ySCHED_reset       (void)
    for (i = 0; i < 500; ++i) {
       mySCHED.effective[i] = '1';
    }
-   ySCHED__effout();
+   ysched_valid__out();
    strncpy (mySCHED.global, mySCHED.effective, 500);
    strncpy (mySCHED.gloout, mySCHED.effout   , 100);
    /*---(initialize)---------------------*/
@@ -153,15 +152,14 @@ ySCHED_save        (tSCHED *a_sched)
       DEBUG_YSCHED  yLOG_sexitr  (__FUNCTION__, FAILED);
       return FAILED;
    }
-   strncpy(a_sched->min, g_sched.min, 100);
-   strncpy(a_sched->hrs, g_sched.hrs, 100);
-   strncpy(a_sched->dys, g_sched.dys, 100);
-   strncpy(a_sched->mos, g_sched.mos, 100);
-   strncpy(a_sched->dow, g_sched.dow, 100);
-   strncpy(a_sched->wks, g_sched.wks, 100);
-   strncpy(a_sched->yrs, g_sched.yrs, 100);
-   strncpy(a_sched->eff, g_sched.eff, 500);
-   /*> a_sched->dur = g_sched.dur;                                                    <*/
+   strncpy (a_sched->min, g_sched.min, 100);
+   strncpy (a_sched->hrs, g_sched.hrs, 100);
+   strncpy (a_sched->dys, g_sched.dys, 100);
+   strncpy (a_sched->mos, g_sched.mos, 100);
+   strncpy (a_sched->dow, g_sched.dow, 100);
+   strncpy (a_sched->wks, g_sched.wks, 100);
+   strncpy (a_sched->yrs, g_sched.yrs, 100);
+   strncpy (a_sched->eff, g_sched.eff, 500);
    DEBUG_YSCHED  yLOG_sexit   (__FUNCTION__);
    return 0;
 }
@@ -179,7 +177,6 @@ ySCHED_load        (tSCHED *a_sched)
    strncpy (g_sched.wks, a_sched->wks, 100);
    strncpy (g_sched.yrs, a_sched->yrs, 100);
    strncpy (g_sched.eff, a_sched->eff, 500);
-   /*> g_sched.dur = a_sched->dur;                                                    <*/
    DEBUG_YSCHED  yLOG_sexit   (__FUNCTION__);
    return 0;
 }
@@ -190,45 +187,6 @@ ySCHED_load        (tSCHED *a_sched)
 /*===----                            parsing                           ----===*/
 /*====================------------------------------------====================*/
 static void      o___PARSE___________________o (void) {;}
-
-char
-ysched__special         (char *a_recd)
-{
-   if (a_recd [0] != '.')   return 0;
-   if (strncmp (a_recd, ".holiday"  ,  8) == 0) {
-      DEBUG_YSCHED  yLOG_info   ("control" , "identified file scope holiday entry");
-      ySCHED__globalize (a_recd, 0);
-      mySCHED.status = SKIPPING;
-      return mySCHED.status;
-   }
-   if (strncmp (a_recd, ".vacation"  ,  9) == 0) {
-      DEBUG_YSCHED  yLOG_info   ("control" , "identified file scope vacation entry");
-      ySCHED__globalize (a_recd, 0);
-      mySCHED.status = SKIPPING;
-      return mySCHED.status;
-   }
-   if (strncmp (a_recd, ".blackout",   9) == 0) {
-      DEBUG_YSCHED  yLOG_info   ("control" , "identified file scope blackout entry");
-      ySCHED__globalize (a_recd, 0);
-      mySCHED.status = SKIPPING;
-      return mySCHED.status;
-   }
-   if (strncmp (a_recd, ".validity",   9) == 0) {
-      DEBUG_YSCHED  yLOG_info   ("control" , "identified file scope validity entry");
-      ySCHED__globalize (a_recd, 0);
-      mySCHED.status = SKIPPING;
-      return mySCHED.status;
-   }
-   if (strncmp (a_recd, ".effective", 10) == 0) {
-      DEBUG_YSCHED  yLOG_info   ("control" , "identified effective range entry");
-      ySCHED__effective (a_recd, 0);
-      mySCHED.status = SKIPPING;
-      return mySCHED.status;
-   }
-   DEBUG_YSCHED  yLOG_info   ("future" , "record is a control for future use");
-   mySCHED.status = FAILED;
-   return mySCHED.status;
-}
 
 char       /*----: scheduling grammer driver ---------------------------------*/
 ySCHED_parse       (tSCHED *a_sched, cchar *a_recd)
@@ -244,31 +202,38 @@ ySCHED_parse       (tSCHED *a_sched, cchar *a_recd)
    ySCHED__init ();
    ysched_reseterror ();
    /*---(defense)------------------------*/
-   if (a_recd == NULL || a_recd[0] == '\0' || a_recd[0] == ' ' || a_recd[0] == '#') {
-      ySCHED__effinit ();
+   --rce;  if (a_recd == NULL || a_recd[0] == '\0' || a_recd[0] == ' ' || a_recd[0] == '#') {
       mySCHED.status = FAILED;
-      return mySCHED.status;
+      DEBUG_YSCHED  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
    }
    /*---(copy it)------------------------*/
    strncpy (s_raw       , a_recd, LEN_RECD);
    strncpy (mySCHED.full, a_recd, LEN_RECD);
    strncpy (x_recd      , a_recd, LEN_RECD);
    /*---(process speciality)-------------*/
-   --rce;  if (mySCHED.full[0] == '.') {
-      rc = ysched__special (mySCHED.full);
-      if (rc < 0)  return rce;
+   --rce;  if (strncmp (a_recd, ".valid", 6) == 0) {
+      rc = ySCHED_valid (s_raw, mySCHED.s_epoch);
+      if (rc < 0) {
+         DEBUG_YSCHED  yLOG_exitr   (__FUNCTION__, rc);
+         return rc;
+      }
+      DEBUG_YSCHED  yLOG_exit    (__FUNCTION__);
+      return 0;
    }
    /*---(general defenses)---------------*/
    len = strlen(mySCHED.full);
-   if (len <=  8) {
+   --rce;  if (len <=  8) {
       DEBUG_YSCHED  yLOG_info   ("FAILURE", "record too short ( < 12 )");
       mySCHED.status = FAILED;
-      return mySCHED.status;
+      DEBUG_YSCHED  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
    }
-   if (len >  100) {
+   --rce;  if (len >  100) {
       DEBUG_YSCHED  yLOG_info   ("FAILURE", "record too long ( > 100 )");
       mySCHED.status = FAILED;
-      return mySCHED.status;
+      DEBUG_YSCHED  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
    }
    /*---(break it down)------------------*/
    strncpy (mySCHED.recd, mySCHED.full, LEN_RECD);
