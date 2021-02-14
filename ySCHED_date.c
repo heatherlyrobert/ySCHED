@@ -4,30 +4,22 @@
 
 
 
+char        g_ready     = '-';    /* date has been set */
+
+
 
 /*====================------------------------------------====================*/
 /*===----                              dates                           ----===*/
 /*====================------------------------------------====================*/
 static void      o___DATES___________________o (void) {;}
 
-char
-ysched__timezone        (void)
-{
-   long        x_utc       = 946684800;  /* 2000-01-01     */
-   long        x_local     =         0;
-   tTIME      *x_broke     = NULL;
-   localtime_r (&x_utc, &x_broke);
-   x_local = mktime (&x_broke);
-   mySCHED.tz_secs  = x_utc - x_local;
-   return mySCHED.tz_secs / DAY2SEC;
-}
-
 char       /*--> clear all data fields ---------------------------------------*/
-ysched_resetdate        (void)
+ysched_date_reset        (void)
 {
    /*---(header)-------------------------*/
    DEBUG_YSCHED  yLOG_senter  (__FUNCTION__);
    /*---(date specific)------------------*/
+   g_ready         = '-';
    mySCHED.s_epoch = mySCHED.s_off   = 0;
    mySCHED.s_year  = mySCHED.s_month = mySCHED.s_day   = mySCHED.s_dst   = 0;
    mySCHED.s_doy   = mySCHED.s_woy   = mySCHED.s_dow   = 0;
@@ -54,7 +46,7 @@ ysched_date__ymd2epoch  (cchar a_year, cchar a_month, cchar a_day)
    /*---(header)-------------------------*/
    DEBUG_YSCHED  yLOG_enter   (__FUNCTION__);
    /*---(reset date fields)--------------*/
-   ysched_resetdate ();
+   ysched_date_reset ();
    /*---(check max ranges)---------------*/
    DEBUG_YSCHED  yLOG_complex ("a_year"   , "%d (0 to 99)", a_year);
    --rce;  if (a_year < 0 || a_year > 99) {
@@ -103,11 +95,6 @@ ysched_date__ymd2epoch  (cchar a_year, cchar a_month, cchar a_day)
    /*---(complete)-----------------------*/
    DEBUG_YSCHED  yLOG_exit    (__FUNCTION__);
    return 0;
-}
-
-char       /*--> set the data for parsing ------------------------------------*/
-ysched_date__epoch2ymd  (long a_epoch)
-{
 }
 
 char       /*--> set the data for parsing ------------------------------------*/
@@ -273,28 +260,28 @@ ysched_date__driver     (void)
    /*---(get current date)---------------*/
    rc = ysched_date__current (-1);
    --rce;  if (rc < 0) {
-      ysched_resetdate ();
+      ysched_date_reset ();
       DEBUG_YSCHED  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
    /*---(work out the dow for 1st)-----------*/
    rc = ysched_date__dow_1st ();
    --rce;  if (rc < 0) {
-      ysched_resetdate ();
+      ysched_date_reset ();
       DEBUG_YSCHED  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
    /*---(work out the max days)--------------*/
    rc = ysched_date__max_days ();
    --rce;  if (rc < 0) {
-      ysched_resetdate ();
+      ysched_date_reset ();
       DEBUG_YSCHED  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
    /*---(work out the max weeks)-------------*/
    rc = ysched_date__max_weeks ();
    --rce;  if (rc < 0) {
-      ysched_resetdate ();
+      ysched_date_reset ();
       DEBUG_YSCHED  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
@@ -303,8 +290,18 @@ ysched_date__driver     (void)
    return 0;
 }
 
+char
+ysched_date__update     (cchar a_year, cchar a_month, cchar a_day)
+{
+   char        u           =  '-';
+   if (mySCHED.s_year  != a_year)   u = 'y';
+   if (mySCHED.s_month != a_month)  u = 'y';
+   if (mySCHED.s_day   != a_day)    u = 'y';
+   if (u != 'y')  return 0;
+}
+
 char       /*--> set the data for parsing ------------------------------------*/
-ySCHED_date        (cchar a_year, cchar a_month, cchar a_day)
+ySCHED_config_by_date   (char a_year, char a_month, char a_day)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -314,7 +311,7 @@ ySCHED_date        (cchar a_year, cchar a_month, cchar a_day)
    /*---(defenses)-----------------------*/
    rc = ysched_date__ymd2epoch (a_year, a_month, a_day);
    --rce;  if (rc < 0) {
-      ysched_resetdate ();
+      ysched_date_reset ();
       DEBUG_YSCHED  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
@@ -325,13 +322,15 @@ ySCHED_date        (cchar a_year, cchar a_month, cchar a_day)
       DEBUG_YSCHED  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
+   /*---(set as ready)-------------------*/
+   g_ready = 'y';
    /*---(complete)-----------------------*/
    DEBUG_YSCHED  yLOG_exit    (__FUNCTION__);
    return 0;
 }
 
 char
-ySCHED_epoch       (long a_epoch)
+ySCHED_config_by_epoch  (long a_epoch)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -342,15 +341,11 @@ ySCHED_epoch       (long a_epoch)
    /*---(header)-------------------------*/
    DEBUG_YSCHED  yLOG_enter   (__FUNCTION__);
    /*---(reset date fields)--------------*/
-   ysched_resetdate ();
+   ysched_date_reset ();
    /*---(get current date)---------------*/
    if (a_epoch >= 0)  x_now = a_epoch;
    else               x_now = time (NULL);
    localtime_r (&x_now, &x_broke);
-   /*---(clear small elements)-----------*/
-   /*> x_broke.tm_sec  = 0;                                                           <* 
-    *> x_broke.tm_min  = 0;                                                           <* 
-    *> x_broke.tm_hour = 0;                                                           <*/
    /*---(save date parts)----------------*/
    mySCHED.s_year   = x_broke.tm_year - 100;
    mySCHED.s_month  = x_broke.tm_mon  + 1;
@@ -358,7 +353,7 @@ ySCHED_epoch       (long a_epoch)
    /*---(defenses)-----------------------*/
    rc = ysched_date__ymd2epoch (mySCHED.s_year, mySCHED.s_month, mySCHED.s_day);
    --rce;  if (rc < 0) {
-      ysched_resetdate ();
+      ysched_date_reset ();
       DEBUG_YSCHED  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
@@ -369,8 +364,44 @@ ySCHED_epoch       (long a_epoch)
       DEBUG_YSCHED  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
+   /*---(set as ready)-------------------*/
+   g_ready = 'y';
    /*---(complete)-----------------------*/
    DEBUG_YSCHED  yLOG_exit    (__FUNCTION__);
    return 0;
+}
+
+
+
+/*====================------------------------------------====================*/
+/*===----                         unit testing                         ----===*/
+/*====================------------------------------------====================*/
+static void      o___UNITTEST________________o (void) {;};
+
+char*      /*----: unit testing accessor for clean validation interface ------*/
+ysched_date__unit       (char *a_question)
+{
+   char        t           [LEN_HUND]  = "";
+   char        s           [LEN_HUND]  = "";
+   /*---(detailed parsing)---------------*/
+   strncpy (unit_answer, "unknown request", 100);
+   /*---(date set)-----------------------*/
+   if        (strcmp(a_question, "current"      ) == 0) {
+      sprintf (unit_answer, "DATE current     : ");
+      if (mySCHED.s_month == 0)  sprintf (t, " ·y  ·m  ·d  · · · · · · ");
+      else                       sprintf (t, "%2dy %2dm %2dd %10ld %c ", mySCHED.s_year, mySCHED.s_month, mySCHED.s_day, mySCHED.s_epoch, (mySCHED.s_dst == 0) ? '·' : 'y');
+      strcat (unit_answer, t);
+      if (mySCHED.s_dow == 0)    sprintf (t, "·dow  ·dim   ·diy   ·doy");
+      else                       sprintf (t, "%1ddow %2ddim %3ddiy %3ddoy", mySCHED.s_dow, mySCHED.s_dim, mySCHED.s_diy, mySCHED.s_doy);
+      strcat (unit_answer, t);
+      if (mySCHED.s_off == 0)    sprintf (t, "    ·off ");
+      else                       sprintf (t, " %4doff ", mySCHED.s_off);
+      strcat (unit_answer, t);
+      if (mySCHED.s_wiy == 0)    sprintf (t, "·fdow ·wze  ·wiy  ·woy");
+      else                       sprintf (t, "%1dfdow %1dwze %2dwiy %2dwoy", mySCHED.s_fdow, mySCHED.s_wze, mySCHED.s_wiy, mySCHED.s_woy);
+      strcat (unit_answer, t);
+   }
+   /*---(complete)-----------------------*/
+   return unit_answer;
 }
 

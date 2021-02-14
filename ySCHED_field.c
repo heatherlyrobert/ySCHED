@@ -4,19 +4,6 @@
 
 
 
-static char s_field     [LEN_RECD]  = "";
-
-int         e_field     =    0;
-int         e_section   =    0;
-
-char        e_func      [LEN_LABEL] = "";
-int         e_line      =    0;
-char        e_issue     [LEN_DESC]  = "";
-int         e_pos       =    0;
-int         e_len       =    0;
-char        e_fancy     [LEN_RECD]  = "";
-
-
 
 #define   MAX_FIELDS      10
 struct {
@@ -127,66 +114,6 @@ struct {
 
 
 /*====================------------------------------------====================*/
-/*===----                      error reporting                         ----===*/
-/*====================------------------------------------====================*/
-static void      o___ERRORS__________________o (void) {;};
-
-char
-ysched__trouble         (int *a_func, int a_line, char *a_issue, int a_pos, int a_len)
-{
-   strlcpy (e_func , a_func , LEN_LABEL);
-   e_line  = a_line;
-   strlcpy (e_issue, a_issue, LEN_DESC);
-   e_pos   = a_pos;
-   e_len   = a_len;
-   strlcpy (e_fancy, ""     , LEN_RECD);
-   return 0;
-}
-
-char
-ysched_reseterror       (void)
-{
-   strlcpy (s_field, "", LEN_HUND);
-   e_field    = 0;
-   e_section  = 0;
-   ysched__trouble ("-", 0, "-", -1, 0);
-   return 0;
-}
-
-char
-ysched_fancify          (void)
-{
-   char        t           [LEN_RECD]  = "";
-   char        o           =    0;
-   if (e_line <= 0) {
-      strlcpy (e_fancy, BOLD_GRN, LEN_RECD);
-      strlcat (e_fancy, s_raw   , LEN_RECD);
-      strlcat (e_fancy, BOLD_OFF, LEN_RECD);
-      return 0;
-   }
-   if (e_pos  <  0) {
-      strlcpy (e_fancy, BOLD_MAG, LEN_RECD);
-      strlcat (e_fancy, s_raw   , LEN_RECD);
-      strlcat (e_fancy, BOLD_OFF, LEN_RECD);
-      return 0;
-   }
-   o = e_field + e_section + e_pos;
-   if (o > 0)  sprintf (t, "%-*.*s", o, o, s_raw);
-   /*> printf ("\n");                                                                 <*/
-   strlcpy (e_fancy, t, LEN_RECD);
-   /*> printf ("%s\n", e_fancy);                                                      <*/
-   sprintf (t, "%s%-*.*s%s", BOLD_ERR, e_len, e_len, s_raw + o, BOLD_OFF);
-   strlcat (e_fancy, t, LEN_RECD);
-   /*> printf ("%s\n", e_fancy);                                                      <*/
-   sprintf (t, "%s", s_raw + o + e_len);
-   strlcat (e_fancy, t, LEN_RECD);
-   /*> printf ("%s\n", e_fancy);                                                      <*/
-   return 0;
-}
-
-
-
-/*====================------------------------------------====================*/
 /*===----                       parsing support                        ----===*/
 /*====================------------------------------------====================*/
 static void      o___SUPPORT_________________o (void) {;};
@@ -202,7 +129,7 @@ ysched__limits          (char a_type)
    s_max       = 0;
    s_tmax      = 0;
    /*---(defense)------------------------*/
-   --rce;  if (mySCHED.s_epoch <=  0) {
+   --rce;  if (YSCHED_NOT_READY) {
       ysched__trouble (""       , __LINE__, "epoch unset", 0, 0);
       return rce;
    }
@@ -247,7 +174,7 @@ ysched__prep       (char *p)
    s_len       =   0;
    s_ptr       = s_input;
    /*---(defense)------------------------*/
-   --rce;  if (mySCHED.s_epoch <=  0) {
+   --rce;  if (YSCHED_NOT_READY) {
       ysched__trouble (""       , __LINE__, "epoch unset", 0, 0);
       return rce;
    }
@@ -260,9 +187,9 @@ ysched__prep       (char *p)
    DEBUG_YSCHED yLOG_value   ("s_len"     , s_len);
    --rce;  if (s_len <= 0)  return rce;
    /*---(section offset)-----------------*/
-   if (strcmp (s_field, "") == 0)  e_section = 0;
+   if (strcmp (mySCHED.x_field, "") == 0)  e_section = 0;
    else {
-      e_section = p - s_field;
+      e_section = p - mySCHED.x_field;
       if (e_section >= LEN_HUND)   e_section = 0;
    }
    DEBUG_YSCHED yLOG_point   ("e_section" , e_section);
@@ -344,7 +271,7 @@ ysched__modify          (void)
    /*---(default)------------------------*/
    ysched__trouble ("-"      , 0       , "-"              , -1, 0);
    /*---(defense)------------------------*/
-   --rce;  if (mySCHED.s_epoch <=  0) {
+   --rce;  if (YSCHED_NOT_READY) {
       ysched__trouble ("modify" , __LINE__, "epoch not set"  , -1, 0);
       return rce;
    }
@@ -380,7 +307,7 @@ ysched__step       (void)
    /*---(default)------------------------*/
    ysched__trouble ("-"      , 0       , "-"              , -1, 0);
    /*---(defense)------------------------*/
-   --rce;  if (mySCHED.s_epoch <=  0) {
+   --rce;  if (YSCHED_NOT_READY) {
       ysched__trouble ("step"   , __LINE__, "epoch not set"  , -1, 0);
       return rce;
    }
@@ -441,7 +368,7 @@ ysched__nearest    (void)
    /*---(header)-------------------------*/
    DEBUG_YSCHED yLOG_enter   (__FUNCTION__);
    /*---(defense)------------------------*/
-   --rce;  if (mySCHED.s_epoch <=  0) {
+   --rce;  if (YSCHED_NOT_READY) {
       ysched__trouble ("nearest", __LINE__, "epoch not set", -1, 0);
       DEBUG_YSCHED yLOG_exitr   (__FUNCTION__, rce);
       return rce;
@@ -545,7 +472,7 @@ ysched__number     (cchar *a_number)
    ysched__trouble ("-"      , 0       , "-"              , -1, 0);
    /*> printf ("   %-7.7s  %4d  %d\n", a_number, x_num, e_pos);                       <*/
    /*---(defense)------------------------*/
-   --rce;  if (mySCHED.s_epoch <=  0) {
+   --rce;  if (YSCHED_NOT_READY) {
       ysched__trouble ("number" , __LINE__, "epoch not set"  , -1, 0);
       DEBUG_YSCHED yLOG_sexitr  (__FUNCTION__, rce);
       return rce;
@@ -624,7 +551,7 @@ ysched__const           (void)
    /*---(default)------------------------*/
    ysched__trouble ("-"      , 0       , "-"              , -1, 0);
    /*---(defense)------------------------*/
-   --rce;  if (mySCHED.s_epoch <=  0) {
+   --rce;  if (YSCHED_NOT_READY) {
       ysched__trouble ("const"  , __LINE__, "epoch not set"  , -1, 0);
       return rce;
    }
@@ -679,7 +606,7 @@ ysched__lesser          (void)
    ysched__trouble ("-"      , 0       , "-"              , -1, 0);
    /*> printf ("%-10.10s  %4d  %d\n", s_ptr, x_num, e_pos);                           <*/
    /*---(defense)------------------------*/
-   --rce;  if (mySCHED.s_epoch <=  0) {
+   --rce;  if (YSCHED_NOT_READY) {
       ysched__trouble ("lesser" , __LINE__, "epoch not set"  , -1, 0);
       DEBUG_YSCHED yLOG_exitr   (__FUNCTION__, rce);
       return rce;
@@ -721,7 +648,7 @@ ysched__greater         (void)
    /*---(default)------------------------*/
    ysched__trouble ("-"      , 0       , "-"              , -1, 0);
    /*---(defense)------------------------*/
-   --rce;  if (mySCHED.s_epoch <=  0) {
+   --rce;  if (YSCHED_NOT_READY) {
       ysched__trouble ("greater", __LINE__, "epoch not set"  , -1, 0);
       DEBUG_YSCHED yLOG_exitr   (__FUNCTION__, rce);
       return rce;
@@ -763,7 +690,7 @@ ysched__between         (void)
    /*---(default)------------------------*/
    ysched__trouble ("-"      , 0       , "-"              , -1, 0);
    /*---(defense)------------------------*/
-   --rce;  if (mySCHED.s_epoch <=  0) {
+   --rce;  if (YSCHED_NOT_READY) {
       ysched__trouble ("between", __LINE__, "epoch not set"  , -1, 0);
       DEBUG_YSCHED yLOG_exitr   (__FUNCTION__, rce);
       return rce;
@@ -838,7 +765,7 @@ ysched__range           (void)
    /*---(default)------------------------*/
    ysched__trouble ("-"      , 0       , "-"              , -1, 0);
    /*---(defense)------------------------*/
-   --rce;  if (mySCHED.s_epoch <=  0) {
+   --rce;  if (YSCHED_NOT_READY) {
       ysched__trouble ("range"  , __LINE__, "epoch not set"  , -1, 0);
       DEBUG_YSCHED yLOG_exitr   (__FUNCTION__, rce);
       return rce;
@@ -994,7 +921,7 @@ ysched_field       (cchar *a_field, char *a_array, char a_type)
    /*---(default)------------------------*/
    ysched__trouble ("-"      , 0       , "-"              , -1, 0);
    /*---(defense)------------------------*/
-   --rce;  if (mySCHED.s_epoch <=  0) {
+   --rce;  if (YSCHED_NOT_READY) {
       ysched__trouble ("number" , __LINE__, "epoch not set"  , -1, 0);
       DEBUG_YSCHED yLOG_exitr   (__FUNCTION__, rce);
       return rce;
@@ -1015,17 +942,17 @@ ysched_field       (cchar *a_field, char *a_array, char a_type)
    --rce;  if (a_field == NULL)  {
       /*---(check for defaulting)-----------*/
       if (a_type == PARSE_WKS || a_type == PARSE_YRS) {
-         strlcpy (s_field, "*", LEN_RECD);
+         strlcpy (mySCHED.x_field, "*", LEN_RECD);
       } else {
          DEBUG_YSCHED yLOG_exitr (__FUNCTION__, rce);
          return rce;
       }
    } else {
-      strlcpy (s_field, a_field, LEN_RECD);
+      strlcpy (mySCHED.x_field, a_field, LEN_RECD);
    }
-   DEBUG_YSCHED yLOG_point   ("s_field"   , s_field);
+   DEBUG_YSCHED yLOG_point   ("x_field"   , mySCHED.x_field);
    /*---(field offset)-------------------*/
-   e_field = a_field - mySCHED.recd;
+   e_field = a_field - mySCHED.x_raw;
    if (e_field >= LEN_RECD)  e_field = 0;
    DEBUG_YSCHED yLOG_point   ("e_field"   , e_field);
    /*---(initialize arrays)--------------*/
@@ -1033,7 +960,7 @@ ysched_field       (cchar *a_field, char *a_array, char a_type)
    rc = ysched__empty (x_array);
    DEBUG_YSCHED yLOG_info    ("initial"   , x_array);
    /*---(parse into sections)------------*/
-   p = strtok_r (s_field, q, &s);
+   p = strtok_r (mySCHED.x_field, q, &s);
    --rce;
    while (p != NULL) {
       rc = ysched__section (p, x_array);

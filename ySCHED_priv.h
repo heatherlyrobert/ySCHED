@@ -27,8 +27,8 @@
 
 #define     P_VERMAJOR  "1.--, in production and general use"
 #define     P_VERMINOR  "1.4-, clean, rework, and expand testing"
-#define     P_VERNUM    "1.4e"
-#define     P_VERTXT    "cleaned valid dates and added new error reporting there too"
+#define     P_VERNUM    "1.4f"
+#define     P_VERTXT    "fixed and tested valid dates transfer to schedules"
 
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
@@ -71,6 +71,7 @@ typedef const char       cchar;
 typedef const int        cint;
 typedef unsigned int     uint;
 
+#define   LEN_VALID          500
 
 #define     SUCCESS             0
 #define     NOT_READY          -1
@@ -98,26 +99,28 @@ typedef unsigned int     uint;
 #define    HOUR2SEC       (60 * 60)
 #define    DAY2SEC        (24 * 60 * 60)
 
+extern char g_ready;
+#define    YSCHED_NOT_READY   g_ready != 'y'
+extern char g_beg       [LEN_TERSE];
+extern char g_end       [LEN_TERSE];
 
 typedef struct cLOCAL tLOCAL;
 struct cLOCAL {
    /*---(overall)-----------*/
    char        status;
-   char        full  [LEN_RECD];
    char        debug;
-   int         tz_secs;                /* seconds from UTC                     */
    /*---(parsing)-----------*/
-   char        recd  [LEN_RECD];
-   char       *xmin;
-   char       *xhrs;
-   char       *xdys;
-   char       *xmos;
-   char       *xdow;
-   char       *xwks;
-   char       *xyrs;
-   char       *xdur;
-   char        last [LEN_HUND];
-   /*---(statistics)--------*/
+   char        full        [LEN_RECD];
+   char        x_raw       [LEN_RECD];
+   char        x_field     [LEN_RECD];
+   char       *x_min;
+   char       *x_hrs;
+   char       *x_dys;
+   char       *x_mos;
+   char       *x_dow;
+   char       *x_wks;
+   char       *x_yrs;
+   char        last        [LEN_HUND];
    /*---(as-set date)-------*/
    long        s_epoch;                /* as-set unix epoch date              */
    char        s_year;                 /* as-set year (incremental from 1900) */
@@ -134,17 +137,57 @@ struct cLOCAL {
    uchar       s_dow;                  /* as_set dow of the week              */
    uchar       s_fdow;                 /* dow of the 1st of current month     */
    int         s_off;                  /* offset of as-set day from today     */
-   /*---(effective)---------*/
-   char        effective   [500];
+   /*---(validity)----------*/
+   char        v_beg       [LEN_TERSE];     /* valid beginning (inclusive)    */
+   char        v_end       [LEN_TERSE];     /* valid ending (inclusive)       */
+   char        valid       [LEN_VALID];     /* valid layout                   */
    char        effout      [500];
-   char        global      [500];
-   char        gloout      [500];
    /*---(done)--------------*/
 };
 extern  tLOCAL mySCHED;
 
 
-extern tSCHED    g_sched;
+
+/*===[[ PUBLIC STRUCTURE ]]===============================*/
+typedef struct cSCHED  tSCHED;
+struct  cSCHED
+{
+   /*---(id)----------------*/
+   uchar     seq;
+   /*---(input)-------------*/
+   char      raw   [LEN_HUND];        /* raw scheduling grammar text          */
+   /*---(set for)-----------*/
+   long      epoch;                   /* time set for last parsing            */
+   char      year;
+   char      month;
+   char      day;
+   /*---(details)-----------*/
+   char      min   [LEN_LONG];        /* minutes           0-59               */
+   char      hrs   [LEN_TITLE];       /* hours             0-23               */
+   char      dys   [LEN_DESC];        /* days of month     1-31               */
+   char      mos   [LEN_LABEL];       /* month of year     1-12               */
+   char      dow   [LEN_TERSE];       /* day of week       1-7                */
+   char      wks   [LEN_LONG];        /* week of year      1-53               */
+   char      yrs   [LEN_LONG];        /* years             1-50               */
+   /*---(validity)----------*/
+   char      beg   [LEN_TERSE];       /* effective beginning (inclusive)      */
+   char      end   [LEN_TERSE];       /* effective ending (inclusive)         */
+   char      valid;                   /* valid for update time                */
+   /*---(links)-------------*/
+   tSCHED   *m_prev;
+   tSCHED   *m_next;
+   /*---(done)--------------*/
+};
+extern tSCHED     *g_head;
+extern tSCHED     *g_tail;
+extern tSCHED     *g_curr;
+extern int         g_count;
+extern int         g_max;
+extern tSCHED      g_null;
+
+
+extern char      unit_answer [LEN_RECD];
+
 
 char *strtok_r (char*, cchar*, char**);
 int   isdigit  (int);
@@ -185,18 +228,19 @@ extern char  e_fancy     [LEN_RECD];
 
 
 /*345678901-12345678901-12345678901-12345678901-12345678901-12345678901-123456*/
-char        ysched__timezone        (void);
-char        ysched_resetdate        (void);
+char        ysched_date_reset       (void);
 char        ysched_date__ymd2epoch  (cchar a_year, cchar a_month, cchar a_day);
 char        ysched_date__current    (long a_now);
 char        ysched_date__dow_1st    (void);
 char        ysched_date__max_days   (void);
 char        ysched_date__max_weeks  (void);
+char*       ysched_date__unit       (char *a_question);
 
 /*---(errors)---------------*/
-char        ysched_reseterror       (void);
+char        ysched_error_reset      (void);
 char        ysched__trouble         (int *a_func, int a_line, char *a_issue, int a_pos, int a_len);
 char        ysched_fancify          (void);
+char*       ysched_error__unit      (char *a_question);
 /*---(support)--------------*/
 char        ysched__limits          (char a_type);
 char        ysched__prep            (char *p);
@@ -223,22 +267,13 @@ char        ysched_field            (cchar *a_input, char *a_array, char a_type)
 
 char        ysched_valid__out       (void);
 char        ysched_valid__init      (void);
-char        ysched_valid__end     (char *a_date, char a_side, long a_now);
+char        ysched_valid__end       (char *a_date, char a_side, long a_now);
+char*       ysched_valid__unit      (char *a_question);
 
 
-char       /*----: set the effective date range ------------------------------*/
-ySCHED_valid       (char *a_recd, long a_now);
 
 char*      /*----: unit testing accessor for clean validation interface ------*/
 ysched__accessor   (char *a_question);
-
-
-char       /*----: add efffective dates to global ----------------------------*/
-ySCHED__globalize  (char *a_recd, long a_now);
-
-
-char       /*----: update effective for a list of exceptions -----------------*/
-ySCHED__effnot     (char *a_list, long a_now);
 
 
 
@@ -248,6 +283,16 @@ char        ysched__unit_loud       (void);
 char        ysched__unit_end        (void);
 
 
+/*---(support)--------------*/
+char        ysched_parse__wipe      (tSCHED *a_sched);
+char*       ysched_parse__memory    (tSCHED *a_sched);
+/*---(memory)---------------*/
+char        ysched_parse__new       (tSCHED **a_new);
+char        ysched_parse__free      (tSCHED **a_old);
+char        ysched_purge            (void);
+/*---(unittest)-------------*/
+char*       ysched_parse__unit      (char *a_question, int a_num);
+/*---(done)-----------------*/
 
 
 

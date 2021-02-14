@@ -3,6 +3,9 @@
 #include   "ySCHED_priv.h"
 
 
+char        g_beg       [LEN_TERSE] = "00.01.01";
+char        g_end       [LEN_TERSE] = "50.01.01";
+
 
 static int   s_bvalid   =  365;
 static int   s_evalid   = -100;
@@ -18,10 +21,10 @@ char
 ysched_valid__fill      ()
 {
    int         i           =    0;
-   for (i = 0; i < 500; ++i) {
+   for (i = 0; i < LEN_VALID; ++i) {
       if (i < s_bvalid + 100)      continue;
       if (i > s_evalid + 100)      continue;
-      mySCHED.effective [i] = '1';
+      mySCHED.valid [i] = '1';
    }
    return 0;
 }
@@ -33,11 +36,11 @@ ysched_valid__out     (void)
    int         i           =    0;
    ysched_valid__fill ();
    mySCHED.effout [++n] = '<';
-   for (i =  0; i <  29; ++i)  mySCHED.effout [++n] = mySCHED.effective [i +  71];
+   for (i =  0; i <  29; ++i)  mySCHED.effout [++n] = mySCHED.valid [i +  71];
    mySCHED.effout [++n] = ' ';
-   mySCHED.effout [++n] = mySCHED.effective [100];
+   mySCHED.effout [++n] = mySCHED.valid [100];
    mySCHED.effout [++n] = ' ';
-   for (i =  0; i <  29; ++i)  mySCHED.effout [++n] = mySCHED.effective[i + 101];
+   for (i =  0; i <  29; ++i)  mySCHED.effout [++n] = mySCHED.valid[i + 101];
    mySCHED.effout [++n] = '>';
    mySCHED.effout [++n] = '\0';
    return 0;
@@ -49,11 +52,11 @@ ysched_valid__init      (void)
    /*---(locals)-------------------------*/
    int       i         = 0;            /* loop iterator -- day                */
    /*---(initialize)---------------------*/
-   strlcpy (g_sched.beg, "50.01.01", LEN_TERSE);
+   strlcpy (g_beg, "50.01.01", LEN_TERSE);
+   strlcpy (g_end, "00.01.01", LEN_TERSE);
    s_bvalid =  365;
-   strlcpy (g_sched.end, "00.01.01", LEN_TERSE);
    s_evalid = -100;
-   for (i = 0; i < 500; ++i)  mySCHED.effective[i] = '_';
+   for (i = 0; i < LEN_VALID; ++i)  mySCHED.valid [i] = '_';
    ysched_valid__out();
    /*---(complete)-----------------------*/
    return 0;
@@ -93,11 +96,11 @@ ysched_valid__end       (char *a_date, char a_side, long a_now)
    strlcpy (x_date, a_date, LEN_TERSE);
    /*---(field offset)-------------------*/
    e_section = 0;
-   e_field   = a_date - mySCHED.recd;
+   e_field   = a_date - mySCHED.x_raw;
    if (e_field >= LEN_RECD)  e_field = 0;
    DEBUG_YSCHED yLOG_value   ("e_field"   , e_field);
    /*---(defense)------------------------*/
-   --rce;  if (mySCHED.s_epoch <=  0) {
+   --rce;  if (YSCHED_NOT_READY) {
       ysched__trouble ("effend" , __LINE__, "epoch not set"  , -1, 0);
       DEBUG_YSCHED yLOG_exitr (__FUNCTION__, rce);
       return rce;
@@ -140,12 +143,12 @@ ysched_valid__end       (char *a_date, char a_side, long a_now)
    DEBUG_YSCHED yLOG_value   ("x_off"     , x_off);
    switch (a_side) {
    case 'b' :
+      strlcpy (g_beg, x_date, LEN_TERSE);
       s_bvalid = x_off;
-      strlcpy (g_sched.beg, x_date, LEN_TERSE);
       break;
    case 'e' :
+      strlcpy (g_end, x_date, LEN_TERSE);
       s_evalid = x_off;
-      strlcpy (g_sched.end, x_date, LEN_TERSE);
       break;
    }
    --rce;  if (a_side == 'e' && s_bvalid > s_evalid) {
@@ -161,7 +164,7 @@ ysched_valid__end       (char *a_date, char a_side, long a_now)
 }
 
 char       /*----: set the effective date range ------------------------------*/
-ySCHED_valid            (char *a_recd, long a_now)
+ySCHED_valid            (char *a_recd)
 {
    /*---(locals)-------------------------*/
    char        rce         =  -10;
@@ -171,15 +174,11 @@ ySCHED_valid            (char *a_recd, long a_now)
    char       *x_beg       = NULL;
    char       *x_end       = NULL;
    char       *x_except    = NULL;
-   long        x_now       = 0;
    int         i           = 0;
    /*---(header)-------------------------*/
    DEBUG_YSCHED yLOG_enter   (__FUNCTION__);
    /*---(default)------------------------*/
    ysched__trouble ("-"      , 0       , "-"              , -1, 0);
-   /*---(current time)-------------------*/
-   if (a_now != 0)  x_now   = a_now;
-   else             x_now   = time(NULL);
    /*---(initialize)---------------------*/
    ysched_valid__wipe ();
    /*---(defense)------------------------*/
@@ -189,7 +188,11 @@ ySCHED_valid            (char *a_recd, long a_now)
       DEBUG_YSCHED yLOG_exitr (__FUNCTION__, rce);
       return rce;
    }
-   --rce;  if (mySCHED.s_epoch <=  0) {
+   /*---(prepare)------------------------*/
+   strncpy  (mySCHED.full, a_recd  , LEN_RECD);
+   strncpy  (mySCHED.x_raw, a_recd  , LEN_RECD);
+   /*---(defense)------------------------*/
+   --rce;  if (YSCHED_NOT_READY) {
       ysched_valid__wipe ();
       ysched__trouble ("valid"  , __LINE__, "epoch not set"  , -1, 0);
       ysched_fancify ();
@@ -197,8 +200,7 @@ ySCHED_valid            (char *a_recd, long a_now)
       return rce;
    }
    /*---(break it down)------------------*/
-   strncpy  (mySCHED.recd, a_recd  , LEN_RECD);
-   p = strtok_r (mySCHED.recd, " ", &r);
+   p = strtok_r (mySCHED.x_raw, " ", &r);
    --rce;  if (p == NULL || strcmp (p, ".valid") != 0) {
       ysched_valid__wipe ();
       ysched__trouble ("valid"  , __LINE__, "prefix wrong"   , -1, 0);
@@ -208,7 +210,7 @@ ySCHED_valid            (char *a_recd, long a_now)
    }
    /*---(beginning)----------------------*/
    x_beg  = strtok_r (NULL, " ", &r);
-   rc = ysched_valid__end (x_beg, 'b', x_now);
+   rc = ysched_valid__end (x_beg, 'b', mySCHED.s_epoch);
    --rce;  if (rc < 0) {
       ysched_valid__wipe ();
       ysched_fancify ();
@@ -217,16 +219,13 @@ ySCHED_valid            (char *a_recd, long a_now)
    }
    /*---(ending)-------------------------*/
    x_end  = strtok_r (NULL, " ", &r);
-   rc = ysched_valid__end (x_end, 'e', x_now);
+   rc = ysched_valid__end (x_end, 'e', mySCHED.s_epoch);
    --rce;  if (rc < 0) {
       ysched_valid__wipe ();
       ysched_fancify ();
       DEBUG_YSCHED yLOG_exitr (__FUNCTION__, rce);
       return rce;
    }
-   /*---(exceptions)---------------------*/
-   /*> xexcept    = strtok(NULL    , " ");                                            <*/
-   /*> ySCHED__effnot (xexcept, x_now);                                                 <*/
    /*---(print)--------------------------*/
    ysched_valid__out ();
    ysched_fancify ();
@@ -235,6 +234,33 @@ ySCHED_valid            (char *a_recd, long a_now)
    /*---(complete)-----------------------*/
    DEBUG_YSCHED yLOG_exit    (__FUNCTION__);
    return 0;
+}
+
+char
+ySCHED_newfile         (void)
+{
+   ySCHED_valid (YSCHED_ALWAYS);
+   return 0;
+}
+
+
+/*====================------------------------------------====================*/
+/*===----                         unit testing                         ----===*/
+/*====================------------------------------------====================*/
+static void      o___UNITTEST________________o (void) {;};
+
+char*      /*----: unit testing accessor for clean validation interface ------*/
+ysched_valid__unit      (char *a_question)
+{
+   char        t           [LEN_HUND]  = "";
+   char        s           [LEN_HUND]  = "";
+   /*---(detailed parsing)---------------*/
+   strncpy (unit_answer, "unknown request", 100);
+   if        (strcmp(a_question, "effective"    ) == 0) {
+      sprintf(unit_answer, "VALID effective  : %-8.8s %s %-8.8s", g_beg, mySCHED.effout, g_end);
+   }
+   /*---(complete)-----------------------*/
+   return unit_answer;
 }
 
 

@@ -36,13 +36,15 @@ is...
    3) end          yy.mm.dd or > which means end-of-time
 
 this record effects all the following scheduled entries.  there can be multiple
-entries in a file.  a file with no entries means valid forever.
+entries in a file.  a file with no entries means valid forever.  any unreadable
+or malformed .valid statement translates to never valid.
 
 .B examples...
    .valid  20.02.10 20.04.10   between two dates (inclusive)
    .valid  20.01.01 >          from Jan 1th, 2020 on
    .valid  < 22.07.13          up until Jul 13th, 2022
    .valid  < >                 always and forever
+   .valid  - -                 never, useful during maintenance
 
 .SH SCHEDULING INPUT FORMAT
 each input record contains a
