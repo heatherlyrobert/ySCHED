@@ -983,5 +983,33 @@ ysched_field       (cchar *a_field, char *a_array, char a_type)
 
 
 
+/*====================------------------------------------====================*/
+/*===----                         unit testing                         ----===*/
+/*====================------------------------------------====================*/
+static void      o___UNITTEST________________o (void) {;};
+
+char*      /*----: unit testing accessor for clean validation interface ------*/
+ysched_field__unit      (char *a_question)
+{
+   char        t           [LEN_HUND]  = "";
+   char        s           [LEN_HUND]  = "";
+   /*---(detailed parsing)---------------*/
+   strncpy (unit_answer, "unknown request", 100);
+   /*---(parsing)------------------------*/
+   if      (strcmp(a_question, "parsed"       ) == 0) {
+      sprintf(unit_answer, "FIELD freq       : %.35s", mySCHED.last);
+   } else if (strcmp(a_question, "section"      ) == 0) {
+      sprintf (t, "%2d[%-.20s]", strlen (s_section), s_section);
+      sprintf (s, "%2d[%-.20s]", strlen (s_ptr  ), s_ptr  );
+      sprintf(unit_answer, "FIELD section    : %-24.24s  %2db  %2de  %c!  %c^  %c~  %2d/  %s", t, s_beg, s_end, s_not, s_rev, s_inv, s_stp, s);
+   } else if (strcmp(a_question, "limits"       ) == 0) {
+      sprintf(unit_answer, "FIELD limit (%2d) : %-12.12s  min %3d to %-3d max -- tmax %d", s_type, s_label, s_min, s_max, s_tmax);
+   }
+   /*---(complete)-----------------------*/
+   return unit_answer;
+}
+
+
+
 
 

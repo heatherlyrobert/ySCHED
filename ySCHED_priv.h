@@ -27,8 +27,8 @@
 
 #define     P_VERMAJOR  "1.--, in production and general use"
 #define     P_VERMINOR  "1.4-, clean, rework, and expand testing"
-#define     P_VERNUM    "1.4f"
-#define     P_VERTXT    "fixed and tested valid dates transfer to schedules"
+#define     P_VERNUM    "1.4g"
+#define     P_VERTXT    "unit tested basic ySCHED_test_by_date"
 
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
@@ -161,6 +161,10 @@ struct  cSCHED
    char      year;
    char      month;
    char      day;
+   /*---(last test)---------*/
+   char      hour;
+   char      minute;
+   char      result;
    /*---(details)-----------*/
    char      min   [LEN_LONG];        /* minutes           0-59               */
    char      hrs   [LEN_TITLE];       /* hours             0-23               */
@@ -261,6 +265,7 @@ char        ysched__range           (void);
 /*---(drivers)--------------*/
 char        ysched__section         (cchar *a_sect, char *a_array);
 char        ysched_field            (cchar *a_input, char *a_array, char a_type);
+char*       ysched_field__unit      (char *a_question);
 /*---(done)-----------------*/
 
 
@@ -271,9 +276,6 @@ char        ysched_valid__end       (char *a_date, char a_side, long a_now);
 char*       ysched_valid__unit      (char *a_question);
 
 
-
-char*      /*----: unit testing accessor for clean validation interface ------*/
-ysched__accessor   (char *a_question);
 
 
 
@@ -295,6 +297,7 @@ char*       ysched_parse__unit      (char *a_question, int a_num);
 /*---(done)-----------------*/
 
 
+char*       ysched_test__unit       (char *a_question);
 
 
 

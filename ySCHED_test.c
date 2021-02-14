@@ -86,7 +86,20 @@ ySCHED_test_by_time     (void *a_sched, int a_hour, int a_minute)
    char        rce         =  -10;
    tSCHED     *x_sched     = NULL;
    /*---(check location)-----------------*/
+   --rce;  if (a_sched == NULL)       return rce;
    x_sched = (tSCHED *) a_sched;
+   /*---(check update)-------------------*/
+   if      (x_sched->year   != mySCHED.s_year)    ySCHED_update (a_sched);
+   else if (x_sched->month  != mySCHED.s_month)   ySCHED_update (a_sched);
+   else if (x_sched->day    != mySCHED.s_day)     ySCHED_update (a_sched);
+   /*---(check for already tested)-------*/
+   if (x_sched->hour == a_hour) {
+      if (x_sched->minute == a_minute)  return 2;
+   }
+   /*---(mark test)----------------------*/
+   x_sched->hour   = a_hour;
+   x_sched->minute = a_minute;
+   x_sched->result = 0;
    /*---(effective)----------------------*/
    if (x_sched->valid  != 'y') {
       return 0;
@@ -115,8 +128,9 @@ ySCHED_test_by_time     (void *a_sched, int a_hour, int a_minute)
    if (a_minute == ySCHED_ANY && strchr (x_sched->min, '1') == NULL) {
       return 0;
    }
+   /*---(mark success)-------------------*/
+   x_sched->result = 1;
    /*---(complete)-----------------------*/
-   /*> return x_sched->dur;                                                           <*/
    return 1;
 }
 
@@ -127,55 +141,19 @@ ySCHED_test_by_time     (void *a_sched, int a_hour, int a_minute)
 /*====================------------------------------------====================*/
 static void      o___UNITTEST________________o (void) {;};
 
-char*      /*----: unit testing accessor for clean validation interface ------*/
-ysched__accessor   (char *a_question)
+char*
+ysched_test__unit       (char *a_question)
 {
-   char        t           [LEN_HUND]  = "";
-   char        s           [LEN_HUND]  = "";
-   /*---(detailed parsing)---------------*/
-   strncpy (unit_answer, "unknown request", 100);
-   /*---(parsing)------------------------*/
-   if      (strcmp(a_question, "parsed"       ) == 0) {
-      sprintf(unit_answer, "parsed freq    : %.35s", mySCHED.last);
-   } else if (strcmp(a_question, "field"        ) == 0) {
-      sprintf(unit_answer, "field          : %3d:%.45s", s_len, s_input);
-
-   } else if (strcmp(a_question, "section"      ) == 0) {
-      sprintf (t, "%2d[%-.20s]", strlen (s_section), s_section);
-      sprintf (s, "%2d[%-.20s]", strlen (s_ptr  ), s_ptr  );
-      sprintf(unit_answer, "section        : %-24.24s  %2db  %2de  %c!  %c^  %c~  %2d/  %s", t, s_beg, s_end, s_not, s_rev, s_inv, s_stp, s);
-   } else if (strcmp(a_question, "step"         ) == 0) {
-      sprintf(unit_answer, "step           : %d", s_stp);
-   } else if (strcmp(a_question, "modifiers"    ) == 0) {
-      sprintf(unit_answer, "modifiers      : not=%c, rev=%c, inv=%c", s_not, s_rev, s_inv);
-   } else if (strcmp(a_question, "range"        ) == 0) {
-      sprintf(unit_answer, "range          : beg=%-3d, end=%d", s_beg, s_end);
-   } else if (strcmp(a_question, "limits"       ) == 0) {
-      sprintf(unit_answer, "limits    (%2d) : %-12.12s  min %3d to %-3d max -- tmax %d", s_type, s_label, s_min, s_max, s_tmax);
-   }
-   /*---(detailed parsing)---------------*/
-   else if (strcmp(a_question, "minutes"      ) == 0) {
-      sprintf(unit_answer, "min : %.65s", g_curr->min);
-   } else if (strcmp(a_question, "hours"        ) == 0) {
-      sprintf(unit_answer, "hrs : %.35s", g_curr->hrs);
-   } else if (strcmp(a_question, "days"         ) == 0) {
-      sprintf(unit_answer, "dys : %.35s", g_curr->dys);
-   } else if (strcmp(a_question, "months"       ) == 0) {
-      sprintf(unit_answer, "mos : %.35s", g_curr->mos);
-   } else if (strcmp(a_question, "dow"          ) == 0) {
-      sprintf(unit_answer, "dow : %.35s", g_curr->dow);
-   } else if (strcmp(a_question, "weeks"        ) == 0) {
-      sprintf(unit_answer, "wks : %.60s", g_curr->wks);
-   } else if (strcmp(a_question, "years"        ) == 0) {
-      sprintf(unit_answer, "yrs : %.60s", g_curr->yrs);
-   } else if (strcmp(a_question, "valid"        ) == 0) {
-      sprintf(unit_answer, "PARSE valid      : %-8.8s  %c  %-8.8s", g_curr->beg, g_curr->valid, g_curr->end);
-   } else if (strcmp(a_question, "update"       ) == 0) {
-      sprintf(unit_answer, "PARSE update     : %-10ld  %02d  %02d  %02d", g_curr->epoch, g_curr->year, g_curr->month, g_curr->day);
+   /*---(defense)------------------------*/
+   snprintf (unit_answer, LEN_RECD, "TEST unit        : question unknown");
+   /*---(simple)-------------------------*/
+   if        (strcmp (a_question, "last"         ) == 0) {
+      sprintf(unit_answer, "TEST last        : %2d  %2d  %2d", g_curr->hour, g_curr->minute, g_curr->result);
    }
    /*---(complete)-----------------------*/
    return unit_answer;
 }
+
 
 char       /*----: set up program urgents/debugging --------------------------*/
 ysched__unit_quiet     (void)
