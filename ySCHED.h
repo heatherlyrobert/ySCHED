@@ -124,25 +124,22 @@ typedef    unsigned long  ulong;
 
 /*345678901-12345678901-12345678901-12345678901-12345678901-12345678901-123456*/
 char*       ySCHED_version          (void);
-char        ySCHED_reset            (void);
 
 char        ySCHED_config_by_date   (char a_year, char a_month, char a_day);
 char        ySCHED_config_by_epoch  (long a_epoch);
 
 char        ySCHED_newfile          (void);
 char        ySCHED_valid            (char *a_recd);
+
 char        ySCHED_create           (void **a_sched, char *a_recd);
 char        ySCHED_force            (void **a_sched, char *a_recd);
-char        ySCHED_update           (void *a_sched);
+char        ySCHED_retire           (void **a_sched);
 
 char        ySCHED_test_by_time     (void *a_sched, int a_hour, int a_minute);
 char        ySCHED_test_by_epoch    (void *a_sched, long a_epoch);
 
 char        ySCHED_trouble          (int *a_line, char *a_focus, char *a_issue, int *a_beg, int *a_len, char *a_fancy);
 
-
-/*> char        ySCHED_save             (tSCHED *a_sched);                            <*/
-/*> char        ySCHED_load             (tSCHED *a_sched);                            <*/
 
 
 

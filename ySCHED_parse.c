@@ -252,13 +252,17 @@ ysched_purge            (void)
 {
    tSCHED     *o           = NULL;
    char        c           =    0;
+   DEBUG_YSCHED  yLOG_enter   (__FUNCTION__);
    o = g_head;
+   DEBUG_YSCHED  yLOG_point   ("g_head"    , o);
    while (o != NULL) {
       ++c;
       ysched_parse__free (&o);
       o = g_head;
+      DEBUG_YSCHED  yLOG_point   ("g_head"    , o);
    }
    g_max  = 0;
+   DEBUG_YSCHED  yLOG_exit    (__FUNCTION__);
    return c;
 }
 
@@ -471,7 +475,7 @@ ySCHED_force            (void **a_sched, char *a_recd)
 }
 
 char
-ySCHED_update           (void *a_sched)
+ysched_update           (void *a_sched)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -489,6 +493,7 @@ ySCHED_update           (void *a_sched)
    x_sched = (tSCHED *) a_sched;
    /*---(assign to current)--------------*/
    g_curr = x_sched;
+   DEBUG_YSCHED  yLOG_info    ("raw"       , g_curr->raw);
    /*---(prepare)------------------------*/
    rc = ysched_parse__prep (x_sched->raw);
    DEBUG_YSCHED  yLOG_value   ("prep"      , rc);
@@ -500,7 +505,7 @@ ySCHED_update           (void *a_sched)
    rc = ysched_parse__parse ();
    DEBUG_YSCHED  yLOG_value   ("split"     , rc);
    --rce;  if (rc < 0) {
-      ysched_parse__free (x_sched);
+      ysched_parse__free (&a_sched);
       DEBUG_YSCHED  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
@@ -515,83 +520,24 @@ ySCHED_update           (void *a_sched)
    return 0;
 }
 
-/*> char       /+----: scheduling grammer driver ---------------------------------+/                <* 
- *> ySCHED_parse       (void **a_sched, char *a_recd)                                               <* 
- *> {                                                                                               <* 
- *>    /+---(locals)-----------+-----+-----+-+/                                                     <* 
- *>    char        rce         =  -10;                                                              <* 
- *>    int         len         =    0;                                                              <* 
- *>    char        rc          =    0;                                                              <* 
- *>    char        x_recd      [LEN_RECD]  = "";                                                    <* 
- *>    /+---(header)-------------------------+/                                                     <* 
- *>    DEBUG_YSCHED  yLOG_enter   (__FUNCTION__);                                                   <* 
- *>    ySCHED__init ();                                                                             <* 
- *>    ysched_error_reset ();                                                                       <* 
- *>    /+---(defense)------------------------+/                                                     <* 
- *>    --rce;  if (a_recd == NULL || a_recd[0] == '\0' || a_recd[0] == ' ' || a_recd[0] == '#') {   <* 
- *>       mySCHED.status = FAILED;                                                                  <* 
- *>       DEBUG_YSCHED  yLOG_exitr   (__FUNCTION__, rce);                                           <* 
- *>       return rce;                                                                               <* 
- *>    }                                                                                            <* 
- *>    /+---(copy it)------------------------+/                                                     <* 
- *>    strncpy (s_raw       , a_recd, LEN_RECD);                                                    <* 
- *>    strncpy (mySCHED.full, a_recd, LEN_RECD);                                                    <* 
- *>    strncpy (x_recd      , a_recd, LEN_RECD);                                                    <* 
- *>    /+---(process speciality)-------------+/                                                     <* 
- *>    --rce;  if (strncmp (a_recd, ".valid", 6) == 0) {                                            <* 
- *>       rc = ySCHED_valid (s_raw, mySCHED.s_epoch);                                               <* 
- *>       if (rc < 0) {                                                                             <* 
- *>          DEBUG_YSCHED  yLOG_exitr   (__FUNCTION__, rc);                                         <* 
- *>          return rc;                                                                             <* 
- *>       }                                                                                         <* 
- *>       DEBUG_YSCHED  yLOG_exit    (__FUNCTION__);                                                <* 
- *>       return 0;                                                                                 <* 
- *>    }                                                                                            <* 
- *>    /+---(general defenses)---------------+/                                                     <* 
- *>    len = strlen(mySCHED.full);                                                                  <* 
- *>    --rce;  if (len <=  8) {                                                                     <* 
- *>       DEBUG_YSCHED  yLOG_info   ("FAILURE", "record too short ( < 12 )");                       <* 
- *>       mySCHED.status = FAILED;                                                                  <* 
- *>       DEBUG_YSCHED  yLOG_exitr   (__FUNCTION__, rce);                                           <* 
- *>       return rce;                                                                               <* 
- *>    }                                                                                            <* 
- *>    --rce;  if (len >  100) {                                                                    <* 
- *>       DEBUG_YSCHED  yLOG_info   ("FAILURE", "record too long ( > 100 )");                       <* 
- *>       mySCHED.status = FAILED;                                                                  <* 
- *>       DEBUG_YSCHED  yLOG_exitr   (__FUNCTION__, rce);                                           <* 
- *>       return rce;                                                                               <* 
- *>    }                                                                                            <* 
- *>    /+---(break it down)------------------+/                                                     <* 
- *>    strncpy (mySCHED.x_raw, mySCHED.full, LEN_RECD);                                             <* 
- *>    mySCHED.x_min  = strtok (mySCHED.x_raw , " ");                                               <* 
- *>    mySCHED.x_hrs  = strtok (NULL          , " ");                                               <* 
- *>    mySCHED.x_dys  = strtok (NULL          , " ");                                               <* 
- *>    mySCHED.x_mos  = strtok (NULL          , " ");                                               <* 
- *>    mySCHED.x_dow  = strtok (NULL          , " ");                                               <* 
- *>    mySCHED.x_wks  = strtok (NULL          , " ");                                               <* 
- *>    mySCHED.x_yrs  = strtok (NULL          , " ");                                               <* 
- *>    /+---(parse)--------------------------+/                                                     <* 
- *>    rc = 0;                                                                                      <* 
- *>    if (rc >= 0)  rc = ysched_field  (mySCHED.x_min, g_curr->min, PARSE_MNS);                    <* 
- *>    if (rc >= 0)  rc = ysched_field  (mySCHED.x_hrs, g_curr->hrs, PARSE_HRS);                    <* 
- *>    if (rc >= 0)  rc = ysched_field  (mySCHED.x_dys, g_curr->dys, PARSE_DYS);                    <* 
- *>    if (rc >= 0)  rc = ysched_field  (mySCHED.x_mos, g_curr->mos, PARSE_MOS);                    <* 
- *>    if (rc >= 0)  rc = ysched_field  (mySCHED.x_dow, g_curr->dow, PARSE_DOW);                    <* 
- *>    if (rc >= 0)  rc = ysched_field  (mySCHED.x_wks, g_curr->wks, PARSE_WKS);                    <* 
- *>    if (rc >= 0)  rc = ysched_field  (mySCHED.x_yrs, g_curr->yrs, PARSE_YRS);                    <* 
- *>    ysched_fancify ();                                                                           <* 
- *>    --rce;  if (rc < 0) {                                                                        <* 
- *>       DEBUG_YSCHED  yLOG_exitr   (__FUNCTION__, rce);                                           <* 
- *>       return rce;                                                                               <* 
- *>    }                                                                                            <* 
- *>    strncpy (g_curr->valid, mySCHED.valid, LEN_VALID);                                           <* 
- *>    DEBUG_YSCHED  yLOG_info  ("effout"   , mySCHED.effout);                                      <* 
- *>    /+---(copy back)----------------------+/                                                     <* 
- *>    /+> if (a_sched != NULL)   ySCHED_save (a_sched);                                  <+/       <* 
- *>    /+---(complete)-----------------------+/                                                     <* 
- *>    DEBUG_YSCHED  yLOG_exit    (__FUNCTION__);                                                   <* 
- *>    return 0;                                                                                    <* 
- *> }                                                                                               <*/
+char
+ysched_update_all       (void)
+{
+   tSCHED     *o           = NULL;
+   char        rc          =    0;
+   char        c           =    0;
+   DEBUG_YSCHED  yLOG_enter   (__FUNCTION__);
+   o = g_head;
+   DEBUG_YSCHED  yLOG_point   ("g_head"    , o);
+   while (o != NULL) {
+      ++c;
+      rc = ysched_update (o);
+      o = o->m_next;
+      DEBUG_YSCHED  yLOG_point   ("next"      , o);
+   }
+   DEBUG_YSCHED  yLOG_exit    (__FUNCTION__);
+   return c;
+}
 
 
 

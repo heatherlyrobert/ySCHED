@@ -27,8 +27,8 @@
 
 #define     P_VERMAJOR  "1.--, in production and general use"
 #define     P_VERMINOR  "1.4-, clean, rework, and expand testing"
-#define     P_VERNUM    "1.4g"
-#define     P_VERTXT    "unit tested basic ySCHED_test_by_date"
+#define     P_VERNUM    "1.4h"
+#define     P_VERTXT    "completed all current unit testing for this version"
 
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
@@ -292,6 +292,8 @@ char*       ysched_parse__memory    (tSCHED *a_sched);
 char        ysched_parse__new       (tSCHED **a_new);
 char        ysched_parse__free      (tSCHED **a_old);
 char        ysched_purge            (void);
+char        ysched_update           (void *a_sched);
+char        ysched_update_all       (void);
 /*---(unittest)-------------*/
 char*       ysched_parse__unit      (char *a_question, int a_num);
 /*---(done)-----------------*/

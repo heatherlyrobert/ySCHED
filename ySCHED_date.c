@@ -259,6 +259,7 @@ ysched_date__driver     (void)
    DEBUG_YSCHED  yLOG_enter   (__FUNCTION__);
    /*---(get current date)---------------*/
    rc = ysched_date__current (-1);
+   DEBUG_YSCHED  yLOG_value   ("current"   , rc);
    --rce;  if (rc < 0) {
       ysched_date_reset ();
       DEBUG_YSCHED  yLOG_exitr   (__FUNCTION__, rce);
@@ -266,6 +267,7 @@ ysched_date__driver     (void)
    }
    /*---(work out the dow for 1st)-----------*/
    rc = ysched_date__dow_1st ();
+   DEBUG_YSCHED  yLOG_value   ("dow 1st"   , rc);
    --rce;  if (rc < 0) {
       ysched_date_reset ();
       DEBUG_YSCHED  yLOG_exitr   (__FUNCTION__, rce);
@@ -273,6 +275,7 @@ ysched_date__driver     (void)
    }
    /*---(work out the max days)--------------*/
    rc = ysched_date__max_days ();
+   DEBUG_YSCHED  yLOG_value   ("max days"  , rc);
    --rce;  if (rc < 0) {
       ysched_date_reset ();
       DEBUG_YSCHED  yLOG_exitr   (__FUNCTION__, rce);
@@ -280,8 +283,18 @@ ysched_date__driver     (void)
    }
    /*---(work out the max weeks)-------------*/
    rc = ysched_date__max_weeks ();
+   DEBUG_YSCHED  yLOG_value   ("max weeks" , rc);
    --rce;  if (rc < 0) {
       ysched_date_reset ();
+      DEBUG_YSCHED  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   /*---(set as ready)-------------------*/
+   g_ready = 'y';
+   /*---(update all existing)----------------*/
+   rc = ysched_update_all ();
+   DEBUG_YSCHED  yLOG_value   ("update"    , rc);
+   --rce;  if (rc < 0) {
       DEBUG_YSCHED  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
@@ -322,8 +335,6 @@ ySCHED_config_by_date   (char a_year, char a_month, char a_day)
       DEBUG_YSCHED  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   /*---(set as ready)-------------------*/
-   g_ready = 'y';
    /*---(complete)-----------------------*/
    DEBUG_YSCHED  yLOG_exit    (__FUNCTION__);
    return 0;
@@ -364,8 +375,6 @@ ySCHED_config_by_epoch  (long a_epoch)
       DEBUG_YSCHED  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   /*---(set as ready)-------------------*/
-   g_ready = 'y';
    /*---(complete)-----------------------*/
    DEBUG_YSCHED  yLOG_exit    (__FUNCTION__);
    return 0;
