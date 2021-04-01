@@ -539,6 +539,22 @@ ysched_update_all       (void)
    return c;
 }
 
+char
+ySCHED_details          (char *a_min, char *a_hrs, char *a_dys, char *a_mos, char *a_dow, char *a_wks, char *a_yrs, char *a_beg, char *a_end, char *a_valid)
+{
+   if (a_min   != NULL)  strlcpy (a_min, g_curr->min, LEN_LONG);
+   if (a_hrs   != NULL)  strlcpy (a_hrs, g_curr->hrs, LEN_TITLE);
+   if (a_dys   != NULL)  strlcpy (a_dys, g_curr->dys, LEN_DESC);
+   if (a_mos   != NULL)  strlcpy (a_mos, g_curr->mos, LEN_LABEL);
+   if (a_dow   != NULL)  strlcpy (a_dow, g_curr->dow, LEN_TERSE);
+   if (a_wks   != NULL)  strlcpy (a_wks, g_curr->wks, LEN_LONG);
+   if (a_yrs   != NULL)  strlcpy (a_yrs, g_curr->yrs, LEN_LONG);
+   if (a_beg   != NULL)  strlcpy (a_beg, g_curr->beg, LEN_TERSE);
+   if (a_end   != NULL)  strlcpy (a_end, g_curr->end, LEN_TERSE);
+   if (a_valid != NULL)  *a_valid = g_curr->valid;
+   return 0;
+}
+
 
 
 /*====================------------------------------------====================*/

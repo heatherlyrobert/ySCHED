@@ -61,17 +61,17 @@ ySCHED_testepoch        (tSCHED *a_sched, long a_epoch)
       return 0;
    }
    /*---(hours)--------------------------*/
-   if (x_hour != ySCHED_ANY && x_sched->hrs [x_hour]  == '_') {
+   if (x_hour != YSCHED_ANY && x_sched->hrs [x_hour]  == '_') {
       return 0;
    }
-   if (x_hour == ySCHED_ANY && strchr (x_sched->hrs, '1') == NULL) {
+   if (x_hour == YSCHED_ANY && strchr (x_sched->hrs, '1') == NULL) {
       return 0;
    }
    /*---(minutes)------------------------*/
-   if (x_min != ySCHED_ANY && x_sched->min [x_min]  == '_') {
+   if (x_min != YSCHED_ANY && x_sched->min [x_min]  == '_') {
       return 0;
    }
-   if (x_min == ySCHED_ANY && strchr (x_sched->min, '1') == NULL) {
+   if (x_min == YSCHED_ANY && strchr (x_sched->min, '1') == NULL) {
       return 0;
    }
    /*---(complete)-----------------------*/
@@ -133,17 +133,17 @@ ySCHED_test_by_time     (void *a_sched, int a_hour, int a_minute)
       rc = 0;
    }
    /*---(hours)--------------------------*/
-   else if (a_hour   != ySCHED_ANY && x_sched->hrs [a_hour    ]  == '_') {
+   else if (a_hour   != YSCHED_ANY && x_sched->hrs [a_hour    ]  == '_') {
       rc = 0;
    }
-   else if (a_hour   == ySCHED_ANY && strchr (x_sched->hrs, '1') == NULL) {
+   else if (a_hour   == YSCHED_ANY && strchr (x_sched->hrs, '1') == NULL) {
       rc = 0;
    }
    /*---(minutes)------------------------*/
-   else if (a_minute != ySCHED_ANY && x_sched->min [a_minute  ]  == '_') {
+   else if (a_minute != YSCHED_ANY && x_sched->min [a_minute  ]  == '_') {
       rc = 0;
    }
-   else if (a_minute == ySCHED_ANY && strchr (x_sched->min, '1') == NULL) {
+   else if (a_minute == YSCHED_ANY && strchr (x_sched->min, '1') == NULL) {
       rc = 0;
    }
    /*---(mark success)-------------------*/

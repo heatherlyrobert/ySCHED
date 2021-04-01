@@ -506,7 +506,7 @@ ysched__number     (cchar *a_number)
    DEBUG_YSCHED yLOG_sint    (x_num);
    /*> printf ("   %-7.7s  %4d  %d\n", a_number, x_num, e_pos);                       <*/
    /*---(defense)------------------------*/
-   --rce;  if (x_num == 0 && strcmp ("0", a_number) != 0) {
+   --rce;  if (x_num == 0 && strcmp ("0", a_number) != 0 && strcmp ("00", a_number) != 0) {
       ysched__trouble ("number" , __LINE__, "not real zero"  , 0, strlen (a_number));
       DEBUG_YSCHED yLOG_sexitr  (__FUNCTION__, rce);
       return rce;

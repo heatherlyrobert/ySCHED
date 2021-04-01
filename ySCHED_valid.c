@@ -239,8 +239,11 @@ ySCHED_valid            (char *a_recd)
 char
 ySCHED_newfile         (void)
 {
-   ySCHED_valid (YSCHED_ALWAYS);
-   return 0;
+   char        rc          =    0;
+   DEBUG_YSCHED yLOG_enter   (__FUNCTION__);
+   rc = ySCHED_valid (YSCHED_ALWAYS);
+   DEBUG_YSCHED yLOG_exit    (__FUNCTION__);
+   return rc;
 }
 
 

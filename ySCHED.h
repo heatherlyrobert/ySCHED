@@ -105,8 +105,8 @@
 
 
 /*===[[ CONSTANTS ]]======================================*/
-#define   ySCHED_ANY         -1
-#define   ySCHED_CURR        NULL
+#define   YSCHED_ANY         -1
+#define   YSCHED_CURR        NULL
 
 #define   YSCHED_ALWAYS      ".valid < >"
 
@@ -138,7 +138,8 @@ char        ySCHED_retire           (void **a_sched);
 char        ySCHED_test_by_time     (void *a_sched, int a_hour, int a_minute);
 char        ySCHED_test_by_epoch    (void *a_sched, long a_epoch);
 
-char        ySCHED_trouble          (int *a_line, char *a_focus, char *a_issue, int *a_beg, int *a_len, char *a_fancy);
+char        ySCHED_feedback         (int *a_line, char *a_focus, char *a_issue, int *a_beg, int *a_len, char *a_fancy);
+char        ySCHED_details          (char *a_min, char *a_hrs, char *a_dys, char *a_mos, char *a_dow, char *a_wks, char *a_yrs, char *a_beg, char *a_end, char *a_valid);
 
 
 

@@ -75,6 +75,18 @@ ysched_fancify          (void)
    return 0;
 }
 
+char
+ySCHED_feedback         (int *a_line, char *a_focus, char *a_issue, int *a_beg, int *a_len, char *a_fancy)
+{
+   if (a_line  != NULL)  *a_line = e_line;
+   if (a_focus != NULL)  strlcpy (a_focus, e_func , LEN_LABEL);
+   if (a_issue != NULL)  strlcpy (a_issue, e_issue, LEN_DESC);
+   if (a_beg   != NULL)  *a_beg   = e_pos;
+   if (a_len   != NULL)  *a_len   = e_len;
+   if (a_fancy != NULL)  strlcpy (a_fancy, e_fancy, LEN_RECD);
+   return 0;
+}
+
 
 /*====================------------------------------------====================*/
 /*===----                         unit testing                         ----===*/

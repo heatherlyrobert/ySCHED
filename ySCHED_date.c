@@ -53,12 +53,12 @@ ysched_date__ymd2epoch  (cchar a_year, cchar a_month, cchar a_day)
       DEBUG_YSCHED  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   DEBUG_YSCHED  yLOG_complex ("a_month"  , "%d (0 to 12)", a_month);
+   DEBUG_YSCHED  yLOG_complex ("a_month"  , "%d (1 to 12)", a_month);
    --rce;  if (a_month < 1 || a_month > 12) {
       DEBUG_YSCHED  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   DEBUG_YSCHED  yLOG_complex ("a_day"    , "%d (0 to 31)", a_day);
+   DEBUG_YSCHED  yLOG_complex ("a_day"    , "%d (1 to 31)", a_day);
    --rce;  if (a_day < 1 || a_day > 31) {
       DEBUG_YSCHED  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
@@ -70,6 +70,7 @@ ysched_date__ymd2epoch  (cchar a_year, cchar a_month, cchar a_day)
    mySCHED.s_day     = a_day;
    /*---(get current date)---------------*/
    x_now             = time (NULL);
+   DEBUG_YSCHED  yLOG_value   ("x_now"     , x_now);
    localtime_r (&x_now, &x_broke);
    /*---(clear small elements)-----------*/
    x_broke.tm_sec   = 0;
@@ -82,12 +83,22 @@ ysched_date__ymd2epoch  (cchar a_year, cchar a_month, cchar a_day)
    DEBUG_YSCHED  yLOG_value   ("tm_mon"    , x_broke.tm_mon);
    x_broke.tm_mday = mySCHED.s_day;
    DEBUG_YSCHED  yLOG_value   ("tm_mday"   , x_broke.tm_mday);
+   DEBUG_YSCHED  yLOG_value   ("tm_hour"   , x_broke.tm_hour);
    /*---(get the format version)---------*/
    mySCHED.s_epoch  = mktime (&x_broke);
+   DEBUG_YSCHED  yLOG_value   ("tm_hour"   , x_broke.tm_hour);
+   while (x_broke.tm_mon != mySCHED.s_month - 1) {
+      ++x_broke.tm_hour;
+      DEBUG_YSCHED  yLOG_value   ("tm_hour"   , x_broke.tm_hour);
+      mySCHED.s_epoch  = mktime (&x_broke);
+   }
+   DEBUG_YSCHED  yLOG_value   ("s_epoch"   , mySCHED.s_epoch);
    mySCHED.s_dst    = x_broke.tm_isdst == 1;
    /*> printf ("\n");                                                                 <*/
    /*> printf ("%2d, %2d, %2d, %10d, %d\n", a_year, a_month, a_day, mySCHED.s_epoch, x_broke.tm_isdst);   <*/
    /*---(defenses : day)-----------------*/
+   DEBUG_YSCHED  yLOG_value   ("tm_mon"    , x_broke.tm_mon);
+   DEBUG_YSCHED  yLOG_value   ("s_month"   , mySCHED.s_month - 1);
    --rce;  if (x_broke.tm_mon != mySCHED.s_month - 1) {
       DEBUG_YSCHED  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
