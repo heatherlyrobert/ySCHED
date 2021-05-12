@@ -84,28 +84,40 @@ ySCHED_test_by_time     (void *a_sched, int a_hour, int a_minute)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
-   char        rc          =    1;
+   char        rc          =    0;
    tSCHED     *x_sched     = NULL;
    /*---(header)-------------------------*/
    DEBUG_YSCHED  yLOG_enter   (__FUNCTION__);
    /*---(check location)-----------------*/
+   DEBUG_YSCHED  yLOG_point   ("a_sched"   , a_sched);
    --rce;  if (a_sched == NULL) {
       DEBUG_YSCHED  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
    x_sched = (tSCHED *) a_sched;
+   DEBUG_YSCHED  yLOG_value   ("a_hour"    , a_hour);
    --rce;  if (a_hour < 0 || a_hour > 23) {
       DEBUG_YSCHED  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
+   DEBUG_YSCHED  yLOG_value   ("a_minute"  , a_minute);
    --rce;  if (a_minute < 0 || a_minute > 59) {
+      if (a_minute != YSCHED_ANY) {
+         DEBUG_YSCHED  yLOG_exitr   (__FUNCTION__, rce);
+         return rce;
+      }
+      DEBUG_YSCHED  yLOG_note    ("a_minute shown as YSCHED_ANY");
+   }
+   /*---(check update)-------------------*/
+   DEBUG_YSCHED  yLOG_info    ("raw"       , x_sched->raw);
+   if      (x_sched->year   != mySCHED.s_year)    rc = ysched_update (a_sched);
+   else if (x_sched->month  != mySCHED.s_month)   rc = ysched_update (a_sched);
+   else if (x_sched->day    != mySCHED.s_day)     rc = ysched_update (a_sched);
+   DEBUG_YSCHED  yLOG_value   ("update"    , rc);
+   --rce;  if (rc < 0) {
       DEBUG_YSCHED  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
-   /*---(check update)-------------------*/
-   if      (x_sched->year   != mySCHED.s_year)    ysched_update (a_sched);
-   else if (x_sched->month  != mySCHED.s_month)   ysched_update (a_sched);
-   else if (x_sched->day    != mySCHED.s_day)     ysched_update (a_sched);
    /*---(check for already tested)-------*/
    if (x_sched->hour == a_hour) {
       if (x_sched->minute == a_minute) {
@@ -118,7 +130,9 @@ ySCHED_test_by_time     (void *a_sched, int a_hour, int a_minute)
    x_sched->hour   = a_hour;
    x_sched->minute = a_minute;
    x_sched->result = 0;
+   rc = 1;
    /*---(effective)----------------------*/
+   DEBUG_YSCHED  yLOG_char    ("valid"     , x_sched->valid);
    if (x_sched->valid  != 'y') {
       rc = 0;
    }

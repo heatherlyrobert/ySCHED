@@ -297,21 +297,21 @@ ysched_parse__prep      (char *a_recd)
    ysched_error_reset ();
    /*---(defense)------------------------*/
    --rce;  if (a_recd == NULL || a_recd[0] == '\0' || a_recd[0] == ' ' || a_recd[0] == '#') {
-      DEBUG_YSCHED  yLOG_exitr   (__FUNCTION__, rce);
+      DEBUG_YSCHED  yLOG_sexitr   (__FUNCTION__, rce);
       return rce;
    }
    /*---(general defenses)---------------*/
    len = strlen (a_recd);
    --rce;  if (len <=  8) {
-      DEBUG_YSCHED  yLOG_info   ("FAILURE", "record too short ( < 12 )");
+      DEBUG_YSCHED  yLOG_sinfo   ("FAILURE", "record too short ( < 12 )");
       mySCHED.status = FAILED;
-      DEBUG_YSCHED  yLOG_exitr   (__FUNCTION__, rce);
+      DEBUG_YSCHED  yLOG_sexitr   (__FUNCTION__, rce);
       return rce;
    }
    --rce;  if (len >  100) {
-      DEBUG_YSCHED  yLOG_info   ("FAILURE", "record too long ( > 100 )");
+      DEBUG_YSCHED  yLOG_sinfo   ("FAILURE", "record too long ( > 100 )");
       mySCHED.status = FAILED;
-      DEBUG_YSCHED  yLOG_exitr   (__FUNCTION__, rce);
+      DEBUG_YSCHED  yLOG_sexitr   (__FUNCTION__, rce);
       return rce;
    }
    /*---(copy it)------------------------*/
@@ -368,6 +368,7 @@ ysched_parse__once      (void)
    /*---(copy validity)------------------*/
    strlcpy (g_curr->beg, g_beg, LEN_TERSE);
    strlcpy (g_curr->end, g_end, LEN_TERSE);
+   DEBUG_YSCHED  yLOG_snote   (g_curr->raw);
    /*---(complete)-----------------------*/
    DEBUG_YSCHED  yLOG_sexit   (__FUNCTION__);
    return 0;
@@ -414,6 +415,12 @@ ySCHED_create           (void **a_sched, char *a_recd)
       DEBUG_YSCHED  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
+   DEBUG_YSCHED  yLOG_point   ("a_recd"    , a_recd);
+   --rce;  if (a_recd  == NULL) {
+      DEBUG_YSCHED  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
+   DEBUG_YSCHED  yLOG_info    ("a_recd"    , a_recd);
    /*---(prepare)------------------------*/
    rc = ysched_parse__prep (a_recd);
    DEBUG_YSCHED  yLOG_value   ("prep"      , rc);
@@ -441,9 +448,16 @@ ySCHED_create           (void **a_sched, char *a_recd)
    DEBUG_YSCHED  yLOG_value   ("finish"    , rc);
    rc = ysched_parse__once   ();
    DEBUG_YSCHED  yLOG_value   ("once"      , rc);
+   DEBUG_YSCHED  yLOG_info    ("THE_RAW"   , g_curr->raw);
    /*---(complete)-----------------------*/
    DEBUG_YSCHED  yLOG_exit    (__FUNCTION__);
    return 0;
+}
+
+char*
+ySCHED_raw              (void *a_sched)
+{
+   return ((tSCHED *) a_sched)->raw;
 }
 
 char

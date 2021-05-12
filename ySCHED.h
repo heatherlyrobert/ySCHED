@@ -142,6 +142,7 @@ char        ySCHED_feedback         (int *a_line, char *a_focus, char *a_issue, 
 char        ySCHED_details          (char *a_min, char *a_hrs, char *a_dys, char *a_mos, char *a_dow, char *a_wks, char *a_yrs, char *a_beg, char *a_end, char *a_valid);
 
 
+char*       ySCHED_raw              (void *a_sched);
 
 
 #endif
