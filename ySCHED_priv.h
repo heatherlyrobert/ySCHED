@@ -27,8 +27,8 @@
 
 #define     P_VERMAJOR  "1.--, in production and general use"
 #define     P_VERMINOR  "1.4-, clean, rework, and expand testing"
-#define     P_VERNUM    "1.4k"
-#define     P_VERTXT    "ready for new valid, blacklist, retire records"
+#define     P_VERNUM    "1.4l"
+#define     P_VERTXT    "eliminated ySCHED_valid logic and testing completely"
 
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
@@ -101,8 +101,6 @@ typedef unsigned int     uint;
 
 extern char g_ready;
 #define    YSCHED_NOT_READY   g_ready != 'y'
-extern char g_beg       [LEN_TERSE];
-extern char g_end       [LEN_TERSE];
 
 typedef struct cLOCAL tLOCAL;
 struct cLOCAL {
@@ -138,11 +136,6 @@ struct cLOCAL {
    uchar       s_dow;                  /* as_set dow of the week              */
    uchar       s_fdow;                 /* dow of the 1st of current month     */
    int         s_off;                  /* offset of as-set day from today     */
-   /*---(validity)----------*/
-   char        v_beg       [LEN_TERSE];     /* valid beginning (inclusive)    */
-   char        v_end       [LEN_TERSE];     /* valid ending (inclusive)       */
-   char        valid       [LEN_VALID];     /* valid layout                   */
-   char        effout      [500];
    /*---(done)--------------*/
 };
 extern  tLOCAL mySCHED;
@@ -269,9 +262,6 @@ char*       ysched_field__unit      (char *a_question);
 
 
 
-char        ysched_valid__out       (void);
-char        ysched_valid__init      (void);
-char        ysched_valid__end       (char *a_date, char a_side, long a_now);
 char*       ysched_valid__unit      (char *a_question);
 
 

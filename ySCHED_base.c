@@ -124,10 +124,10 @@ ySCHED_reset       (void)
    /*---(locals)-------------------------*/
    int       i         = 0;            /* loop iterator -- day                */
    /*---(initialize)---------------------*/
-   for (i = 0; i < LEN_VALID; ++i) {
-      mySCHED.valid [i] = '1';
-   }
-   ysched_valid__out();
+   /*> for (i = 0; i < LEN_VALID; ++i) {                                              <* 
+    *>    mySCHED.valid [i] = '1';                                                    <* 
+    *> }                                                                              <*/
+   /*> ysched_valid__out();                                                           <*/
    /*---(initialize)---------------------*/
    return 0;
 }
