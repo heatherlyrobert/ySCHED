@@ -8,6 +8,7 @@
 int         e_field     =    0;
 int         e_section   =    0;
 
+char        e_sect      [LEN_LABEL] = "";
 char        e_func      [LEN_LABEL] = "";
 int         e_line      =    0;
 char        e_issue     [LEN_DESC]  = "";
@@ -62,28 +63,29 @@ ysched_fancify          (void)
       return 0;
    }
    o = e_field + e_section + e_pos;
-   if (o > 0)  sprintf (t, "%-*.*s", o, o, mySCHED.full);
+   if (o > 0)  sprintf (t, "%s%-*.*s%s", BOLD_GRN, o, o, mySCHED.full, BOLD_OFF);
    /*> printf ("\n");                                                                 <*/
    strlcpy (e_fancy, t, LEN_RECD);
    /*> printf ("%s\n", e_fancy);                                                      <*/
    sprintf (t, "%s%-*.*s%s", BOLD_ERR, e_len, e_len, mySCHED.full + o, BOLD_OFF);
    strlcat (e_fancy, t, LEN_RECD);
    /*> printf ("%s\n", e_fancy);                                                      <*/
-   sprintf (t, "%s", mySCHED.full + o + e_len);
+   sprintf (t, "%s%s%s", BOLD_BLK, mySCHED.full + o + e_len, BOLD_OFF);
    strlcat (e_fancy, t, LEN_RECD);
    /*> printf ("%s\n", e_fancy);                                                      <*/
    return 0;
 }
 
 char
-ySCHED_feedback         (int *a_line, char *a_focus, char *a_issue, int *a_beg, int *a_len, char *a_fancy)
+ySCHED_feedback         (int *r_line, char *r_sect, char *r_focus, char *r_issue, int *r_beg, int *r_len, char *r_fancy)
 {
-   if (a_line  != NULL)  *a_line = e_line;
-   if (a_focus != NULL)  strlcpy (a_focus, e_func , LEN_LABEL);
-   if (a_issue != NULL)  strlcpy (a_issue, e_issue, LEN_DESC);
-   if (a_beg   != NULL)  *a_beg   = e_pos;
-   if (a_len   != NULL)  *a_len   = e_len;
-   if (a_fancy != NULL)  strlcpy (a_fancy, e_fancy, LEN_RECD);
+   if (r_line  != NULL)  *r_line = e_line;
+   if (r_sect  != NULL)  strlcpy (r_sect , e_sect , LEN_LABEL);
+   if (r_focus != NULL)  strlcpy (r_focus, e_func , LEN_LABEL);
+   if (r_issue != NULL)  strlcpy (r_issue, e_issue, LEN_DESC);
+   if (r_beg   != NULL)  *r_beg   = e_pos;
+   if (r_len   != NULL)  *r_len   = e_len;
+   if (r_fancy != NULL)  strlcpy (r_fancy, e_fancy, LEN_RECD);
    return 0;
 }
 

@@ -16,152 +16,263 @@ ySCHED is a simple, elegant, powerful, and extended kernighan scheduling
 grammar that builds on the classic cron implementation to enable support of
 all schedule-based application (like calendaring).
 
-.SH DOCUMENTATION
-.nf
-ySCHED (3)         application programming interface
-.nf
-ySCHED (5)   [***] configuration, data, and files
-.nf
-ySCHED (7)         overview, objectives, and decision rationale
+.SH DOCUMENTATION FILES (see also)
+.nf  
+ySCHED (3)          interfacing applications with library
+.B ySCHED (5)··········user files, data streams, and configuration
+ySCHED (7)          decision rationale, scope, and objectives
 
-.SH VALID DATES
-many scheduled jobs are added, removed, or transitioned at scheduled times,
-rather than immediately.  rather than paying a programmer to remember and wait,
-an administrator can use validity dates.
+.SH TABLE OF CONTENTS
+.nf  
+a) scheduling       formats of schedule strings
+b) modifiers        ranges, steps, etc
+c) constants        short-cuts for clarity
+d) effective        formats of effective dates
 
-.B general layout
-is...
-   1) .valid       fixed header
-   2) start        yy.mm.dd or < which means dawn-of-time
-   3) end          yy.mm.dd or > which means end-of-time
-
-this record effects all the following scheduled entries.  there can be multiple
-entries in a file.  a file with no entries means valid forever.  any unreadable
-or malformed .valid statement translates to never valid.
-
-.B examples...
-   .valid  20.02.10 20.04.10   between two dates (inclusive)
-   .valid  20.01.01 >          from Jan 1th, 2020 on
-   .valid  < 22.07.13          up until Jul 13th, 2022
-   .valid  < >                 always and forever
-   .valid  - -                 never, useful during maintenance
-
-.SH SCHEDULING INPUT FORMAT
-each input record contains a
-.B kernighan scheduling string
-which is independently parsable and is pure
-.B 8bit ascii
-text made up of
-.B 5 to 7 fields
-delimited by any number of spaces.
-
-the
-.B general layout
-of the string is
-.B seven fields,
-but the last two are optional, meaning using fields 1-5, 1-6, or 1-7 are all legal.
+.SH A) SCHEDULING
+each input record contains a kernighan scheduling grammar string which is
+independently parsable and is pure 8bit ascii text made up of 5 to 7 fields
+delimited by any number of spaces.  the fields are...
    1) minutes      0 - 59 minutes
    2) hours        0 - 23 hours
    3) days         1 - 28/31 days, depending on month
    4) months       1 - 12 months
    5) week days    1 (monday) to 7 (sunday)
-   6) weeks        0 to 53 weeks of the year, depending on year
+   6) weeks        0 to 53 weeks of year, 1 is first full week
    7) years        0 (2000) to 50 (2050)
 
-.B basic examples, explained below...
-   #min-- -hrs-- day--- mon--- dow--- wks---
-   *      *      *      *      *      *      every min of every day
-   0      2      *      *      *      *      2am every day
-   0      0      1      *      *      *      midnight on the first
-   10     *      *      *      *      *      10min after every hour
-   30     8,17   *      *      *      *      8:30a and 5:30p
-   12     8      4      7      *      *      july 4th at 8:12am
-   0      20     *      *      Mo,Th  *      every mon/thu at 8pm
-   0,30   8-17   *      *      *      *      half hours from 8a to 5p
-   0      12     *      *      Mo     *      noon every monday
-   0      20     *      *      Fr     1      8p fri of 1st full week
-   0      0      31     *      *      *      midnight on jan 31st
-   0      0      */2    *      *      *      midnight every other day
-   0      3-9/3  *      *      *      *      3a, 6a, and 9a
-   0      15     *      *      *      */2    3p very other week
+all these fields are combined through AND logic to determine when a job is
+scheduled to launch.  as a note, most crons use OR logic with day/dow we prefer
+AND.  and, most do not include the week or year field which can lead to
+overly clever scriping attempts or off-book recording by admins.
 
-.SH FIELD CONTENTS
-schedules are defaulted as empty or never, unless a value is specifically
-declared.
+i will assume the reader has studied crontabs a little or can otherwise
+learn from the internet. i will focus on lesser known and ySCHED specific
+knowledge.
 
-.B single values
-are a way to be very specific about turning a exact time on or off.  there are
+.SS center dot
+the dot (·) makes schedule entries a little more readable, i have make the
+center dot (·) a synonym for * as the general wildcard.  * is more clear
+with steps.
+
+.SS basic examples, should be general cron knowledge
+.nf
+#min-- -hrs-- day--- mon--- dow--- wks---
+·      ·      ·      ·      ·      ·      every min of every day
+0      2      ·      ·      ·      ·      2am every day
+0      0      1      ·      ·      ·      midnight on the first
+10     ·      ·      ·      ·      ·      10min after every hour
+30     8,17   ·      ·      ·      ·      8:30a and 5:30p
+12     8      4      7      ·      ·      july 4th at 8:12am
+0      20     ·      ·      mo,th  ·      every mon/thu at 8pm
+0,30   8-17   ·      ·      ·      ·      half hours from 8a to 5p
+0      12     ·      ·      mo     ·      noon every monday
+0      20     ·      ·      fr     1      8p fri of 1st full week
+0      0      31     ·      ·      ·      midnight on jan 31st
+0      0      */2    ·      ·      ·      midnight every other day
+0      3-9/3  ·      ·      ·      ·      3a, 6a, and 9a
+0      15     ·      ·      ·      */2    3p very other week
+
+.SH B) MODIFIERS
+actual scheduling is often complex, varying for a host of reasons.  rather than
+having seperate schedules for every variation, a more complex grammar than
+simple literals is required.
+
+.SS simple modifiers
+are a way to be very specific about turning an exact time ON or OFF.  there are
 four types of single value entries -- normal, not, reverse, inverse.
+  1) normal        10       specifically turns 10 on
+  2) not           !10      specifically turns 10 off
+  3) reverse       ^10      specifically turns max - 10 on
+  4) inverse       ~10      specifically turns all on except 10
 
-   1) normal        10       specifically turns 10 on
-   2) not           !10      specifically turns 10 off
-   3) reverse       ^10      specifically turns max - 10 on
-   4) inverse       ~10      specifically turns all on except 10
+.SS more examples
+.nf
+#min-- -hrs-- day--- mon--- dow---
+0      6-10,!8   ·   ·      ·       6a, 7a, 9a, and 10a
+0      14     ^1     ·      ·       2p on the next to last day
+0      14     ~5-10  ·      ·       2p the 1-4 and 11-31
+0      0      <5     ·      ·       midnight on the 1st to 5th
+0      0      10>    ·      ·       midnight 10th to month end
 
-.B ranges
+.SS range modifiers
 are a quick shorthand to designate a continuous range of values, rather than
 list them.  there are four types of ranges -- lesser, greater, between, and
 wildcard.  all ranges are inclusive, meaning the literal numbers are included.
-
   1) lesser         <10      all values less that or equal to 10
   2) greater        22>      all values greater that or equal to 22
   3) between        5-17     all values between 5 and 17, inclusive
-  4) wildcard       *        all legal values
-  -) not            !<5      turn of the first six
+  4) wildcard       ·        all legal values
+  -) not            !<5      turn off the first six
   -) reverse        ^0-4     turn on the last five
   -) inverse        ~5-17    all except 5-17
 
-.B multiple values
+.SS list modifiers
 are a way of turning on several different values in a particular field.  this
 is done by separating with commas.
+  1) values        10,12    turn on both 10 and 12
+  2) mixed         5-8,15   turn on 5, 6, 7, 8, and 15
+  -) not           5-8,!6-7 turn on 5 and 8 (6, 7 forced off)
+  -) reverse       0-4,^0-4 turn on the first and last five
 
-   1) values        10,12    turn on both 10 and 12
-   2) mixed         5-8,15   turn on 5, 6, 7, 8, and 15
-   -) not           5-8,!6-7 turn on 5 and 8 (6, 7 forced off)
-   -) reverse       0-4,^0-4 turn on the first and last five
-
-.B steps
+.SS step modifiers
 are a way to jump through a ist, like with increments in c-for statements.
+  1) ranges        3-9/3    jumps by 3x, so 3, 6, and 9
+  2) wildcards     */4      means 1, 5, 9, 13, ... up to max
+  -) not           !6-10/2  turn off 6, 8, and 10
 
-   1) ranges        3-9/3    jumps by 3x, so 3, 6, and 9
-   2) wildcards     */4      means 1, 5, 9, 13, ... up to max
-   -) not           !6-10/2  turn off 6, 8, and 10
-
-.B nearest
+.SS nearest modifiers
 is a way to ensure a week day or a weekend day.  if the week day options are
 already on a week day, the date is unchanged.  same for the weekend versions.
-   1) week day before       15b   first week day before 15th
-   2) week day after        20a   first week day after the 20th
-   3) week day nearest      7n    nearest week day to the 7th
-   4) weekend day before    12B   first sunday before 12th
-   5) weekend day after     5A    first saturday after the 5th
-   6) weekend day nearest   2N    nearest weekend day to the 2nd
+  1) week day before       15b   first week day before 15th
+  2) week day after        20a   first week day after the 20th
+  3) week day nearest      7n    nearest week day to the 7th
+  4) weekend day before    12B   first sunday before 12th
+  5) weekend day after     5A    first saturday after the 5th
+  6) weekend day nearest   2N    nearest weekend day to the 2nd
 
-.B constants
+.SS more examples
+.nf
+#min-- -hrs-- day--- mon--- dow---
+0      15     15n    ·      ·       3p workday nearest the 15th
+0      15     15b    ·      ·       ... on or before the 15th
+0      15     15a    ·      ·       ... on or after the 15th
+0      10     2w     ·      mo      10a on the 2nd Monday
+0      B      ·      ·      W       each bus. hour on weekday
+
+.SH C) CONSTANTS
 are names for commonly used values and ranges to make them easier to read.
 
-   hours...
-      W    Work     8-16       8a  - 5p
-      O    Off      ~8-16      5p  - 8a
-      B    Batch    ~5-22      10p - 5a
+.SS field 2) hours
+.nf
+W,work      8-16       8a  -  5p    typical work
+O,off       ~8-16      5p  -  8a    not work hours
+B,batch     ~6-21      10p -  6a    batch window
+grav        2-4        2a  -  5a    graveyard
+dawn        5-7        5a  -  8a    dawn
+morn        8-10       8a  - 11a    morning
+midd        11-13      11a -  2p    midday
+aftr        14-16      2p  -  5p    afternoon
+dusk        17-19      5p  -  8p    dusk
+even        20-22      8p  - 11p    evening
+midn        ~2-22      11p -  2a    midnight
+light       7-18       7a  -  7p    sunlight
+dark        ~7-18      7p  -  7a    darkness
 
-   days...
-      1w,2w,3w,4w,5w (blocks of 7 days, not perfect Mo-Su)
-      Lw   last 7 days of month
-      Ld   last day of the month
+.SS field 3) days
+.nf
+Ld   31        last day of the month (ex in 31 day month)
+1w   1-7       1st seven days (not Mo - Sun)
+2w   8-14      2nd seven days
+3w   15-21     3rd seven days
+4w   22-28     4th seven days
+5w   29>       5th seven days
+Lw   25-31     last seven days (ex in 31 day month)
 
-   months...
-      Jan,Feb,...Nov,Dec
-      1q,2q,3q,4q,Lq (quarters)
-      1h,2h (halves)
+.SS field 4) months
+.nf
+jan,feb,...nov,dec
+1q        1-3      jan-mar
+2q        4-6      apr-jun
+3q        7-9      jul-sep
+4q        10-12    oct-dec
+1h        1-6      jan-jun
+2h        7-12     jul-dec
+spring    3-5      mar-may
+summer    6-8      jun-aug
+autumn    9-11     sep-nov
+winter    ~3-11    dec-feb
 
-   days-of-week...
-      Mo,Tu,We,Th,Fr,Sa,Su
-      W    Work     1-5        Mo - Fr
-      O    Off      6-7        Sa - Su
+.SS field 5) days-of-week
+.nf
+mo,tu,we,th,fr,sa,su
+W,work    1-5      mo - fr
+O,off     6-7      sa - su
 
-   weeks of the year
-      Lw   last full week of the year
+.SS field 6) weeks-of-year
+.nf
+0        days before first full week
+1        first full week
+Lw       last full week of the year
+
+.SS more examples
+.nf
+#min-- -hrs-- day--- mon--- dow---
+0      8      ·      ·      tu,fr   8a on tuesday and friday
+0      8      1w     ·      mo      first monday of every month
+*/5    batch  ·      ·      ·       every 5min in batch window
+00     13     ·      ·      work    1p on all weekdays
+
+.SH D) EFFECTIVE
+some programs require effective dates and blackout scheduling, khronos (cron)
+absolutely does.  this is a program-by-program decision, but here is the
+method.  ySCHED technically has no involvement or understanding.
+
+many scheduled jobs are added, removed, or transitioned at specific times,
+rather than immediately.  rather than paying a programmer to remember and wait,
+an administrator can use validity dates.
+
+to achieve effective date setting, i settled on creating apparently normal
+scheduling records at the top of the file with special tracker names...
+   .valid     sets when the file is valid/lines can run
+   .only      turns on specific times (rest are disallowed)
+   .blackout  turns off specific times (can accumulate)
+   .retire    sets when the file is not-valid/nothing can run
+
+.B NOTE :
+effective dates with ¼ symbol ignore entries in weekday and weeks fields.
+those two fields still need to exist and be valid, but just put wildcard (·).
+
+.SS .valid
+validity can be anything, but typically it would indicate that after a specific
+date and time the lines can start running.  to indicate on and after, prepend
+line with '¼' symbol and a space.
+
+.B WARNING :
+default validity on a file is never.  so, if there is no .valid record in an
+program type requiring one, nothing will ever run.
+
+.nf
+##min hrs day mon dow wks yrs
+  ·   ·   ·   ·   ·   ·   ·   always valid
+  ·   ·   15  4   ·   ·   ·   valid only on April 15 of every year
+¼ ·   ·   15  4   ·   ·   ·   valid after April 15 of every year
+¼ ·   ·   15  4   ·   ·   22  valid after April 15 of 2022
+¼ ·   22  15  4   ·   ·   22  valid starting April 15 at 10p
+¼ 55  21  15  4   ·   ·   22  valid starting April 15 at 9:55p
+
+.SS .only
+same as .valid record, but named to clarify it is really restrictive.  but,
+there can be only a single .only given its method.
+
+.nf
+##min hrs day mon dow wks yrs
+¼ ·   B   15  4   ·   ·   22  .valid starting April 15 at 11p
+·     B   ·   ·   fr  ·   ·   .only allow during batch on fri
+
+.SS .blackout
+blackouts are the same as .valid, but usually specific dates or date ranges.
+there can be multiple blackout enties and they will be additive.  meant for
+holidays, vacations, outages, cut-overs, maintenance, etc.
+
+.nf
+##min hrs day mon dow wks yrs
+  ·   ·   1   4   ·   ·   22   don't allow on Apr 1st, 2022
+  ·   4-8 3   1   ·   ·   22   not during Mar 1st from 4a-@a
+
+.nf
+##min hrs day mon dow wks yrs  for two complementary files
+  ·   B   ·   ·   fr  ·   ·    .only for maintenance job
+  ·   B   ·   ·   fr  ·   ·    .blackout for normal schedule
+
+.SS .retire
+retirement is exactly like .valid and is usually just a later date. if there
+is no retirement, just do not include a .retire line at all.
+
+.nf
+##min hrs day mon dow wks yrs
+¼ ·   12  20  5   ·   ·   22  .valid after
+¼ ·   12  20  5   ·   ·   23  .retire on May 20 at noon
 
 .SH AUTHOR
 jelloshrike at gmail dot com

@@ -164,7 +164,7 @@ ysched_valid__end       (char *a_date, char a_side, long a_now)
 }
 
 char       /*----: set the effective date range ------------------------------*/
-ySCHED_valid            (char *a_recd)
+ySCHED_valid            (cchar *a_recd)
 {
    /*---(locals)-------------------------*/
    char        rce         =  -10;
@@ -210,7 +210,11 @@ ySCHED_valid            (char *a_recd)
    }
    /*---(beginning)----------------------*/
    x_beg  = strtok_r (NULL, " ", &r);
-   rc = ysched_valid__end (x_beg, 'b', mySCHED.s_epoch);
+   if (strcmp (x_beg, "always") == 0) {
+      rc = ysched_valid__end ("<"  , 'b', mySCHED.s_epoch);
+   } else  {
+      rc = ysched_valid__end (x_beg, 'b', mySCHED.s_epoch);
+   }
    --rce;  if (rc < 0) {
       ysched_valid__wipe ();
       ysched_fancify ();
@@ -218,8 +222,12 @@ ySCHED_valid            (char *a_recd)
       return rce;
    }
    /*---(ending)-------------------------*/
-   x_end  = strtok_r (NULL, " ", &r);
-   rc = ysched_valid__end (x_end, 'e', mySCHED.s_epoch);
+   if (strcmp (x_beg, "always") == 0) {
+      rc = ysched_valid__end (">"  , 'e', mySCHED.s_epoch);
+   } else {
+      x_end  = strtok_r (NULL, " ", &r);
+      rc = ysched_valid__end (x_end, 'e', mySCHED.s_epoch);
+   }
    --rce;  if (rc < 0) {
       ysched_valid__wipe ();
       ysched_fancify ();

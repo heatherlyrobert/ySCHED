@@ -25,76 +25,98 @@ struct {
 };
 
 struct {
-   char        field       [15];
-   char        label       [10];
+   char        field       [LEN_LABEL];
+   char        label       [LEN_TERSE];
    int         min;
    int         max;
    char        rev;
    char        inv;
 } s_const [100] = {
-   /* 12345678901234    12345678901234   123   123    1     1   */
-   /*--- years -------------------------------------------------*/
-   { "years"         , "*"             ,   0 ,  99,  '-',  '-'   },
-   /*--- weeks of the year -------------------------------------*/
-   { "weeks"         , "*"             ,   0 ,  54,  '-',  '-'   },
-   { "weeks"         , "Lw"            ,   0 ,   0,  'y',  '-'   },
-   /*--- months : singles --------------------------------------*/
-   { "months"        , "*"             ,   1 ,  12,  '-',  '-'   },
-   { "months"        , "Jan"           ,   1 ,   1,  '-',  '-'   },
-   { "months"        , "Feb"           ,   2 ,   2,  '-',  '-'   },
-   { "months"        , "Mar"           ,   3 ,   3,  '-',  '-'   },
-   { "months"        , "Apr"           ,   4 ,   4,  '-',  '-'   },
-   { "months"        , "May"           ,   5 ,   5,  '-',  '-'   },
-   { "months"        , "Jun"           ,   6 ,   6,  '-',  '-'   },
-   { "months"        , "Jul"           ,   7 ,   7,  '-',  '-'   },
-   { "months"        , "Aug"           ,   8 ,   8,  '-',  '-'   },
-   { "months"        , "Sep"           ,   9 ,   9,  '-',  '-'   },
-   { "months"        , "Oct"           ,  10 ,  10,  '-',  '-'   },
-   { "months"        , "Nov"           ,  11 ,  11,  '-',  '-'   },
-   { "months"        , "Dec"           ,  12 ,  12,  '-',  '-'   },
-   /*--- months : ranges ---------------------------------------*/
-   { "months"        , "1q"            ,   1 ,   3,  '-',  '-'   },
-   { "months"        , "2q"            ,   4 ,   6,  '-',  '-'   },
-   { "months"        , "3q"            ,   7 ,   9,  '-',  '-'   },
-   { "months"        , "4q"            ,  10 ,  12,  '-',  '-'   },
-   { "months"        , "Lq"            ,   0 ,   2,  'y',  '-'   },
-   { "months"        , "1h"            ,   1 ,   6,  '-',  '-'   },
-   { "months"        , "2h"            ,   7 ,  12,  '-',  '-'   },
-   /*--- days --------------------------------------------------*/
-   { "days"          , "*"             ,   1 ,  31,  '-',  '-'   },
-   { "days"          , "1w"            ,   1 ,   7,  '-',  '-'   },
-   { "days"          , "2w"            ,   8 ,  14,  '-',  '-'   },
-   { "days"          , "3w"            ,  15 ,  21,  '-',  '-'   },
-   { "days"          , "4w"            ,  22 ,  28,  '-',  '-'   },
-   { "days"          , "5w"            ,  29 ,  35,  '-',  '-'   },
-   { "days"          , "Lw"            ,   0 ,   6,  'y',  '-'   },
-   { "days"          , "Ld"            ,   0 ,   0,  'y',  '-'   },
-   /*--- days of the week : singles ----------------------------*/
-   { "daysofweek"    , "*"             ,   1 ,   7,  '-',  '-'   },
-   { "daysofweek"    , "Mo"            ,   1 ,   1,  '-',  '-'   },
-   { "daysofweek"    , "Tu"            ,   2 ,   2,  '-',  '-'   },
-   { "daysofweek"    , "We"            ,   3 ,   3,  '-',  '-'   },
-   { "daysofweek"    , "Th"            ,   4 ,   4,  '-',  '-'   },
-   { "daysofweek"    , "Fr"            ,   5 ,   5,  '-',  '-'   },
-   { "daysofweek"    , "Sa"            ,   6 ,   6,  '-',  '-'   },
-   { "daysofweek"    , "Su"            ,   7 ,   7,  '-',  '-'   },
-   /*--- days of the week : ranges -----------------------------*/
-   { "daysofweek"    , "W"             ,   1 ,   5,  '-',  '-'   },
-   { "daysofweek"    , "Work"          ,   1 ,   5,  '-',  '-'   },
-   { "daysofweek"    , "O"             ,   6 ,   7,  '-',  '-'   },
-   { "daysofweek"    , "Off"           ,   6 ,   7,  '-',  '-'   },
-   /*--- hours : ranges ----------------------------------------*/
-   { "hours"         , "*"             ,   0 ,  23,  '-',  '-'   },
-   { "hours"         , "W"             ,   8 ,  16,  '-',  '-'   },
-   { "hours"         , "Work"          ,   8 ,  16,  '-',  '-'   },
-   { "hours"         , "O"             ,   8 ,  16,  '-',  'y'   },
-   { "hours"         , "Off"           ,   8 ,  16,  '-',  'y'   },
-   { "hours"         , "B"             ,   5 ,  22,  '-',  'y'   },
-   { "hours"         , "Batch"         ,   5 ,  22,  '-',  'y'   },
-   /*--- minutes -----------------------------------------------*/
-   { "minutes"       , "*"             ,   0 ,  59,  '-',  '-'   },
-   /*--- done --------------------------------------------------*/
-   { "---end---"     , "---end---"     ,   0 ,   0,  '-',  '-'   },
+   /*--- years --------------------------min---max---rev---inv--*/
+   { "years"         , "*"             ,   0 ,  99,  '·',  '·'   },
+   { "years"         , "·"             ,   0 ,  99,  '·',  '·'   },
+   /*--- weeks of the year --------------min---max---rev---inv--*/
+   { "weeks"         , "*"             ,   0 ,  54,  '·',  '·'   },
+   { "weeks"         , "·"             ,   0 ,  54,  '·',  '·'   },
+   { "weeks"         , "Lw"            ,   0 ,   0,  'y',  '·'   },
+   /*--- months : singles ---------------min---max---rev---inv--*/
+   { "months"        , "*"             ,   1 ,  12,  '·',  '·'   },
+   { "months"        , "·"             ,   1 ,  12,  '·',  '·'   },
+   { "months"        , "jan"           ,   1 ,   1,  '·',  '·'   },
+   { "months"        , "feb"           ,   2 ,   2,  '·',  '·'   },
+   { "months"        , "mar"           ,   3 ,   3,  '·',  '·'   },
+   { "months"        , "apr"           ,   4 ,   4,  '·',  '·'   },
+   { "months"        , "may"           ,   5 ,   5,  '·',  '·'   },
+   { "months"        , "jun"           ,   6 ,   6,  '·',  '·'   },
+   { "months"        , "jul"           ,   7 ,   7,  '·',  '·'   },
+   { "months"        , "aug"           ,   8 ,   8,  '·',  '·'   },
+   { "months"        , "sep"           ,   9 ,   9,  '·',  '·'   },
+   { "months"        , "oct"           ,  10 ,  10,  '·',  '·'   },
+   { "months"        , "nov"           ,  11 ,  11,  '·',  '·'   },
+   { "months"        , "dec"           ,  12 ,  12,  '·',  '·'   },
+   /*--- months : ranges ----------------min---max---rev---inv--*/
+   { "months"        , "1q"            ,   1 ,   3,  '·',  '·'   },
+   { "months"        , "2q"            ,   4 ,   6,  '·',  '·'   },
+   { "months"        , "3q"            ,   7 ,   9,  '·',  '·'   },
+   { "months"        , "4q"            ,  10 ,  12,  '·',  '·'   },
+   { "months"        , "Lq"            ,   0 ,   2,  'y',  '·'   },
+   { "months"        , "1h"            ,   1 ,   6,  '·',  '·'   },
+   { "months"        , "2h"            ,   7 ,  12,  '·',  '·'   },
+   /*--- months : seasons ---------------min---max---rev---inv--*/
+   { "months"        , "spring"        ,   3 ,   5,  '·',  '·'   },
+   { "months"        , "summer"        ,   6 ,   8,  '·',  '·'   },
+   { "months"        , "autumn"        ,   9 ,  11,  '·',  '·'   },
+   { "months"        , "spring"        ,   3 ,  11,  '·',  'y'   },
+   /*--- days ---------------------------min---max---rev---inv--*/
+   { "days"          , "*"             ,   1 ,  31,  '·',  '·'   },
+   { "days"          , "·"             ,   1 ,  31,  '·',  '·'   },
+   { "days"          , "1w"            ,   1 ,   7,  '·',  '·'   },
+   { "days"          , "2w"            ,   8 ,  14,  '·',  '·'   },
+   { "days"          , "3w"            ,  15 ,  21,  '·',  '·'   },
+   { "days"          , "4w"            ,  22 ,  28,  '·',  '·'   },
+   { "days"          , "5w"            ,  29 ,  35,  '·',  '·'   },
+   { "days"          , "Lw"            ,   0 ,   6,  'y',  '·'   },
+   { "days"          , "Ld"            ,   0 ,   0,  'y',  '·'   },
+   /*--- days of the week : singles -----min---max---rev---inv--*/
+   { "daysofweek"    , "*"             ,   1 ,   7,  '·',  '·'   },
+   { "daysofweek"    , "·"             ,   1 ,   7,  '·',  '·'   },
+   { "daysofweek"    , "mo"            ,   1 ,   1,  '·',  '·'   },
+   { "daysofweek"    , "tu"            ,   2 ,   2,  '·',  '·'   },
+   { "daysofweek"    , "we"            ,   3 ,   3,  '·',  '·'   },
+   { "daysofweek"    , "th"            ,   4 ,   4,  '·',  '·'   },
+   { "daysofweek"    , "fr"            ,   5 ,   5,  '·',  '·'   },
+   { "daysofweek"    , "sa"            ,   6 ,   6,  '·',  '·'   },
+   { "daysofweek"    , "su"            ,   7 ,   7,  '·',  '·'   },
+   /*--- days of the week : ranges ------min---max---rev---inv--*/
+   { "daysofweek"    , "W"             ,   1 ,   5,  '·',  '·'   },
+   { "daysofweek"    , "work"          ,   1 ,   5,  '·',  '·'   },
+   { "daysofweek"    , "O"             ,   6 ,   7,  '·',  '·'   },
+   { "daysofweek"    , "off"           ,   6 ,   7,  '·',  '·'   },
+   /*--- hours : ranges -----------------min---max---rev---inv--*/
+   { "hours"         , "*"             ,   0 ,  23,  '·',  '·'   },
+   { "hours"         , "·"             ,   0 ,  23,  '·',  '·'   },
+   { "hours"         , "W"             ,   8 ,  16,  '·',  '·'   },
+   { "hours"         , "O"             ,   8 ,  16,  '·',  'y'   },
+   { "hours"         , "B"             ,   5 ,  22,  '·',  'y'   },
+   { "hours"         , "work"          ,   8 ,  16,  '·',  '·'   },
+   { "hours"         , "off"           ,   8 ,  16,  '·',  'y'   },
+   { "hours"         , "batch"         ,   5 ,  22,  '·',  'y'   },
+   /*--- hours : eighths and halves -----min---max---rev---inv--*/
+   { "hours"         , "dawn"          ,   5 ,   7,  '·',  '·'   },
+   { "hours"         , "morn"          ,   8 ,  10,  '·',  '·'   },
+   { "hours"         , "midd"          ,  11 ,  13,  '·',  '·'   },
+   { "hours"         , "aftr"          ,  14 ,  16,  '·',  '·'   },
+   { "hours"         , "dusk"          ,  17 ,  19,  '·',  '·'   },
+   { "hours"         , "even"          ,  20 ,  22,  '·',  '·'   },
+   { "hours"         , "midn"          ,   2 ,  22,  '·',  'y'   },
+   { "hours"         , "grav"          ,   2 ,   4,  '·',  '·'   },
+   { "hours"         , "light"         ,   7 ,  19,  '·',  '·'   },
+   { "hours"         , "dark"          ,   7 ,  19,  '·',  'y'   },
+   /*--- minutes ------------------------min---max---rev---inv--*/
+   { "minutes"       , "*"             ,   0 ,  59,  '·',  '·'   },
+   { "minutes"       , "·"             ,   0 ,  59,  '·',  '·'   },
+   /*--- done ---------------------------min---max---rev---inv--*/
+   { "---end---"     , "---end---"     ,   0 ,   0,  '·',  '·'   },
 };
 
 /*
@@ -164,10 +186,10 @@ ysched__prep       (char *p)
    /*---(default)------------------------*/
    s_beg       =  -1;
    s_end       =  -1;
-   s_not       = '-';
-   s_rev       = '-';
-   s_inv       = '-';
-   s_flp       = '-';
+   s_not       = '·';
+   s_rev       = '·';
+   s_inv       = '·';
+   s_flp       = '·';
    s_stp       =   1;
    strlcpy (s_section, "", LEN_HUND);
    strlcpy (s_input  , "", LEN_HUND);
@@ -244,6 +266,22 @@ ysched__apply           (char *a_array)
    }
    /*---(complete)-----------------------*/
    return c;
+}
+
+char         /*--: apply grammar to array ----------------[ ------ [ ------ ]-*/
+ysched__after           (char *a_array)
+{
+   /*---(locals)-----------+-----------+-*/
+   char        x_mark      = '1';
+   char        x_fill      = '-';
+   int         i           =  0;
+   /*---(update normal)------------------*/
+   for (i = 0; i <= s_max; ++i) {
+      if (a_array [i] == x_mark)  x_fill = 'y';
+      if (x_fill == 'y')          a_array [i] = x_mark;
+   }
+   /*---(complete)-----------------------*/
+   return 0;
 }
 
 
@@ -360,7 +398,7 @@ ysched__nearest    (void)
    /*---(locals)-----------+-----------+-*/
    char        rce         = -10;
    int         rc          = 0;
-   char        x_type      = '-';
+   char        x_type      = '·';
    int         x_day       =  0;
    int         x_dow       =  0;
    int         a           =  0;
@@ -506,7 +544,7 @@ ysched__number     (cchar *a_number)
    DEBUG_YSCHED yLOG_sint    (x_num);
    /*> printf ("   %-7.7s  %4d  %d\n", a_number, x_num, e_pos);                       <*/
    /*---(defense)------------------------*/
-   --rce;  if (x_num == 0 && strcmp ("0", a_number) != 0 && strcmp ("00", a_number) != 0) {
+   --rce;  if (x_num == 0 && strcmp ("0", a_number) != 0) {
       ysched__trouble ("number" , __LINE__, "not real zero"  , 0, strlen (a_number));
       DEBUG_YSCHED yLOG_sexitr  (__FUNCTION__, rce);
       return rce;
@@ -814,11 +852,13 @@ ysched__range           (void)
    /*---(handle simple value)------------*/
    rc = ysched__number (s_ptr);
    --rce;  if (rc    <  0) {
+      if (strcmp (e_issue, "-") == 0)  ysched__trouble ("overall", 1, "nothing matched", 0, e_len);
       DEBUG_YSCHED yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
    s_beg = s_end = rc;
    --rce;  if (s_stp != 1) {
+      if (strcmp (e_issue, "-") == 0)  ysched__trouble ("overall", 1, "nothing matched", 0, e_len);
       DEBUG_YSCHED yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
@@ -884,6 +924,7 @@ ysched__section    (cchar *a_sect, char *a_array)
       rc = ysched__range    ();
       DEBUG_YSCHED yLOG_value   ("range"     , rc);
       if (rc < 0)  {
+         if (strcmp (e_issue, "-") == 0)  ysched__trouble ("overall", 1, "unknown string", 0, strlen (a_sect));
          DEBUG_YSCHED yLOG_exitr (__FUNCTION__, rce);
          return rce;
       }
@@ -903,7 +944,7 @@ ysched__section    (cchar *a_sect, char *a_array)
 }
 
 char         /*--: interpret one field of grammar --------[ ------ [ ------ ]-*/
-ysched_field       (cchar *a_field, char *a_array, char a_type)
+ysched_field       (cchar *a_field, char *a_array, char a_type, char a_eval)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -920,6 +961,15 @@ ysched_field       (cchar *a_field, char *a_array, char a_type)
    if (a_array != NULL)  a_array [0] = '\0';
    /*---(default)------------------------*/
    ysched__trouble ("-"      , 0       , "-"              , -1, 0);
+   switch (a_type) {
+   case PARSE_MNS :  strlcpy (e_sect, "minutes"    , LEN_LABEL);  break;
+   case PARSE_HRS :  strlcpy (e_sect, "hours"      , LEN_LABEL);  break;
+   case PARSE_DYS :  strlcpy (e_sect, "days"       , LEN_LABEL);  break;
+   case PARSE_MOS :  strlcpy (e_sect, "months"     , LEN_LABEL);  break;
+   case PARSE_DOW :  strlcpy (e_sect, "day-of-week", LEN_LABEL);  break;
+   case PARSE_WKS :  strlcpy (e_sect, "weeks"      , LEN_LABEL);  break;
+   case PARSE_YRS :  strlcpy (e_sect, "years"      , LEN_LABEL);  break;
+   }
    /*---(defense)------------------------*/
    --rce;  if (YSCHED_NOT_READY) {
       ysched__trouble ("number" , __LINE__, "epoch not set"  , -1, 0);
@@ -968,6 +1018,9 @@ ysched_field       (cchar *a_field, char *a_array, char a_type)
       if (rc <  0) {
          DEBUG_YSCHED yLOG_exitr (__FUNCTION__, rce);
          return rce;
+      }
+      switch (a_eval) {
+      case '¼' : ysched__after (x_array);  break;
       }
       p = strtok_r (NULL, q, &s);
       ++c;

@@ -16,10 +16,60 @@ ySCHED is a simple, elegant, powerful, and extended kernighan scheduling
 grammar that builds on the classic cron implementation to enable support of
 all schedule-based application (like calendaring).
 
-.SH DOCUMENTATION
-.nf
-ySCHED (3)         application programming interface
-.nf
-ySCHED (5)         configuration, data, and files
-.nf
-ySCHED (7)   [***] overview, objectives, and decision rationale
+.SH DOCUMENTATION FILES (see also)
+.nf  
+ySCHED (3)          interfacing applications with library
+ySCHED (5)          user files, data streams, and configuration
+.B ySCHED (7)··········decision rationale, scope, and objectives
+
+.SH TABLE OF CONTENTS
+.nf  
+a) effective        formats of effective dates
+b) scheduling       formats of schedule strings
+c) modifiers        ranges, steps, etc
+d) constants        short-cuts for clarity
+
+.SH OVERVIEW
+ySCHED is a set of shared functions providing flexible, reliable, and consistent
+access to scheduling grammar interpretation.  its purpose is to take a complex
+and foundational capability and provide a shared service that can be tested,
+maintained, and documented once to avoid error-prone code migrations and
+allow all programs to use the full range of features.
+
+ySCHED focuses only on...
+   - kernighan inspired scheduling grammar from his cron (1978)
+   - extended with adaptations from vixie-cron, perl libs, etc.
+   - expanded to handle non-script scheduling (clarity & accuracy)
+   - given additional simplifiers and constants for readability
+   - added a couple clever bits because we *own* our version
+
+above all, ySCHED is meant to enable technical power users access to the
+best that it can provide, not to make it easy for novices.
+
+ySCHED will simultaneously interpret the standard cron entry format as well
+as support the addition of our two additional fields.  the only concern would
+be a slightly different interpretation of the day/dow combination.
+
+
+.SH DESCRIPTION
+ySCHED consists of six externally accessible functions.
+
+
+
+
+.SH RECORD LAYOUT
+
+.B ySCHED
+is powerful and elegant because it was designed by the master, kernighan, as
+part of the original cron in 1978.   since then, it has been tweaked slightly
+by later crons and a bit as part of libraries for perl and others.  we have
+only attempted to stand on their shoulders with this one.
+
+the original scheduling grammar consisted of five fields that dealt with 90% of
+the scheduling needs and then required cron scripts show some intelligence to 
+handle the exception cases.  we will be sharing this library with at least the
+calendaring application, so we must add some tweaks since there will not be any
+scipts to "filter" what we can't express directly.
+
+our scheduling grammar is composed of seven fields which have no fixed length
+and are separated by spaces...

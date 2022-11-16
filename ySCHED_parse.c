@@ -5,15 +5,14 @@
 
 
 tSCHED     g_null     = {
-   255, "/", 1302854400, 11, 4, 15, -1, -1, 0,
+   255, "/", 1302854400, 11, 4, 15, -1, -1, 0, '·',
    "////////////////////////////////////////////////////////////",
    "////////////////////////",
    "//////////////////////////////",
    "////////////",
    "///////",
    "/////////////////////////////////////////////////////",
-   "///////////////////////////////////////////////////",
-   "//.//.//", "//.//.//", '·'
+   "///////////////////////////////////////////////////"
 };
 
 
@@ -67,7 +66,7 @@ ysched_parse__wipe      (tSCHED *a_sched)
    if (a_sched == NULL)  return -1;
    /*---(main)---------------------------*/
    a_sched->seq    =  0;
-   strncpy (a_sched->raw, STR_EDOTS  , LEN_HUND);
+   strncpy (a_sched->raw, YSTR_EDOTS  , LEN_HUND);
    /*---(date)---------------------------*/
    a_sched->epoch  = -1;
    a_sched->year   = -1;
@@ -78,17 +77,17 @@ ysched_parse__wipe      (tSCHED *a_sched)
    a_sched->minute = -1;
    a_sched->result =  0;
    /*---(details)------------------------*/
-   strncpy (a_sched->min, STR_EDOTS  , 60);
-   strncpy (a_sched->hrs, STR_EDOTS  , 24);
-   strncpy (a_sched->dys, STR_EDOTS  , 30);
-   strncpy (a_sched->mos, STR_EDOTS  , 12);
-   strncpy (a_sched->dow, STR_EDOTS  , 7);
-   strncpy (a_sched->wks, STR_EDOTS  , 52);
-   strncpy (a_sched->yrs, STR_EDOTS  , 50);
+   strncpy (a_sched->min, YSTR_EDOTS  , 60);
+   strncpy (a_sched->hrs, YSTR_EDOTS  , 24);
+   strncpy (a_sched->dys, YSTR_EDOTS  , 30);
+   strncpy (a_sched->mos, YSTR_EDOTS  , 12);
+   strncpy (a_sched->dow, YSTR_EDOTS  , 7);
+   strncpy (a_sched->wks, YSTR_EDOTS  , 52);
+   strncpy (a_sched->yrs, YSTR_EDOTS  , 50);
    /*---(valid)--------------------------*/
-   strncpy (a_sched->beg, "00.01.01" , LEN_TERSE);
-   strncpy (a_sched->end, "50.01.01" , LEN_TERSE);
-   a_sched->valid  = '·';
+   /*> strncpy (a_sched->beg, "00.01.01" , LEN_TERSE);                                <*/
+   /*> strncpy (a_sched->end, "50.01.01" , LEN_TERSE);                                <*/
+   /*> a_sched->valid  = '·';                                                         <*/
    /*---(complete)-------------*/
    return 1;
 }
@@ -97,7 +96,7 @@ char*
 ysched_parse__memory    (tSCHED *a_sched)
 {
    int         n           =    0;
-   strlcpy (s_print, "[_.____.___._______.___.__]", LEN_RECD);
+   strlcpy (s_print, "[_.____.___._______.__]", LEN_RECD);
    ++n;  if (a_sched->raw [0] != '·')             s_print [n] = 'X';
    ++n;
    ++n;  if (a_sched->epoch   >= 0)               s_print [n] = 'X';
@@ -117,10 +116,10 @@ ysched_parse__memory    (tSCHED *a_sched)
    ++n;  if (a_sched->wks [0] != '·')             s_print [n] = 'X';
    ++n;  if (a_sched->yrs [0] != '·')             s_print [n] = 'X';
    ++n;
-   ++n;  if (a_sched->beg [0] != '·')             s_print [n] = 'X';
-   ++n;  if (a_sched->end [0] != '·')             s_print [n] = 'X';
-   ++n;  if (a_sched->valid   != '·')             s_print [n] = 'X';
-   ++n;
+   /*> ++n;  if (a_sched->beg [0] != '·')             s_print [n] = 'X';              <*/
+   /*> ++n;  if (a_sched->end [0] != '·')             s_print [n] = 'X';              <*/
+   /*> ++n;  if (a_sched->valid   != '·')             s_print [n] = 'X';              <*/
+   /*> ++n;                                                                           <*/
    ++n;  if (a_sched->m_prev  != NULL)            s_print [n] = 'X';
    ++n;  if (a_sched->m_next  != NULL)            s_print [n] = 'X';
    return s_print;
@@ -286,6 +285,7 @@ ysched_parse__prep      (char *a_recd)
    DEBUG_YSCHED  yLOG_snote   ("reset parsing globals");
    mySCHED.full  [0] = '\0';
    mySCHED.x_raw [0] = '\0';
+   mySCHED.x_eval   = '·';
    mySCHED.x_min    = NULL;
    mySCHED.x_hrs    = NULL;
    mySCHED.x_dys    = NULL;
@@ -330,8 +330,14 @@ ysched_parse__parse     (void)
    char        rc          =    0;
    /*---(header)-------------------------*/
    DEBUG_YSCHED  yLOG_enter   (__FUNCTION__);
+   /*---(eval check)---------------------*/
+   switch (mySCHED.full [0]) {
+   case '¼' :  mySCHED.x_eval = mySCHED.full [0];  break;
+   }
    /*---(copy it)------------------------*/
-   strncpy (mySCHED.x_raw, mySCHED.full, LEN_RECD);
+   if (mySCHED.x_eval == '·')   strlcpy (mySCHED.x_raw, mySCHED.full, LEN_RECD);
+   else                         strlcpy (mySCHED.x_raw, mySCHED.full + 1, LEN_RECD);
+   strltrim (mySCHED.x_raw, ySTR_SINGLE, LEN_RECD);
    /*---(break it down)------------------*/
    mySCHED.x_min  = strtok (mySCHED.x_raw , " ");
    mySCHED.x_hrs  = strtok (NULL          , " ");
@@ -341,13 +347,13 @@ ysched_parse__parse     (void)
    mySCHED.x_wks  = strtok (NULL          , " ");
    mySCHED.x_yrs  = strtok (NULL          , " ");
    /*---(process it)---------------------*/
-   if (rc >= 0)  rc = ysched_field  (mySCHED.x_min, g_curr->min, PARSE_MNS);
-   if (rc >= 0)  rc = ysched_field  (mySCHED.x_hrs, g_curr->hrs, PARSE_HRS);
-   if (rc >= 0)  rc = ysched_field  (mySCHED.x_dys, g_curr->dys, PARSE_DYS);
-   if (rc >= 0)  rc = ysched_field  (mySCHED.x_mos, g_curr->mos, PARSE_MOS);
-   if (rc >= 0)  rc = ysched_field  (mySCHED.x_dow, g_curr->dow, PARSE_DOW);
-   if (rc >= 0)  rc = ysched_field  (mySCHED.x_wks, g_curr->wks, PARSE_WKS);
-   if (rc >= 0)  rc = ysched_field  (mySCHED.x_yrs, g_curr->yrs, PARSE_YRS);
+   if (rc >= 0)  rc = ysched_field  (mySCHED.x_min, g_curr->min, PARSE_MNS, mySCHED.x_eval);
+   if (rc >= 0)  rc = ysched_field  (mySCHED.x_hrs, g_curr->hrs, PARSE_HRS, mySCHED.x_eval);
+   if (rc >= 0)  rc = ysched_field  (mySCHED.x_dys, g_curr->dys, PARSE_DYS, mySCHED.x_eval);
+   if (rc >= 0)  rc = ysched_field  (mySCHED.x_mos, g_curr->mos, PARSE_MOS, mySCHED.x_eval);
+   if (rc >= 0)  rc = ysched_field  (mySCHED.x_dow, g_curr->dow, PARSE_DOW, mySCHED.x_eval);
+   if (rc >= 0)  rc = ysched_field  (mySCHED.x_wks, g_curr->wks, PARSE_WKS, mySCHED.x_eval);
+   if (rc >= 0)  rc = ysched_field  (mySCHED.x_yrs, g_curr->yrs, PARSE_YRS, mySCHED.x_eval);
    ysched_fancify ();
    --rce;  if (rc < 0) {
       DEBUG_YSCHED  yLOG_exitr   (__FUNCTION__, rce);
@@ -364,10 +370,11 @@ ysched_parse__once      (void)
    /*---(header)-------------------------*/
    DEBUG_YSCHED  yLOG_senter  (__FUNCTION__);
    /*---(copy raw)-----------------------*/
-   strlcpy (g_curr->raw, mySCHED.full, LEN_RECD);
+   strlcpy  (g_curr->raw, mySCHED.full, LEN_RECD);
+   strltrim (g_curr->raw, ySTR_SINGLE, LEN_RECD);
    /*---(copy validity)------------------*/
-   strlcpy (g_curr->beg, g_beg, LEN_TERSE);
-   strlcpy (g_curr->end, g_end, LEN_TERSE);
+   /*> strlcpy (g_curr->beg, g_beg, LEN_TERSE);                                       <*/
+   /*> strlcpy (g_curr->end, g_end, LEN_TERSE);                                       <*/
    DEBUG_YSCHED  yLOG_snote   (g_curr->raw);
    /*---(complete)-----------------------*/
    DEBUG_YSCHED  yLOG_sexit   (__FUNCTION__);
@@ -388,16 +395,17 @@ ysched_parse__finish    (void)
    g_curr->hour    = -1;
    g_curr->minute  = -1;
    g_curr->result  =  0;
+   g_curr->eval    =  mySCHED.x_eval;
    /*---(update validity)----------------*/
-   if (mySCHED.valid [100] == '1')  x_valid = 'y';
-   g_curr->valid = x_valid;
+   /*> if (mySCHED.valid [100] == '1')  x_valid = 'y';                                <*/
+   /*> g_curr->valid = x_valid;                                                       <*/
    /*---(complete)-----------------------*/
    DEBUG_YSCHED  yLOG_sexit   (__FUNCTION__);
    return 0;
 }
 
 char
-ySCHED_create           (void **a_sched, char *a_recd)
+ySCHED_create           (void **a_sched, cchar *a_recd)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -454,6 +462,8 @@ ySCHED_create           (void **a_sched, char *a_recd)
    return 0;
 }
 
+char ySCHED_free    (void **a_sched) { return ysched_parse__free (a_sched); }
+
 char*
 ySCHED_raw              (void *a_sched)
 {
@@ -461,7 +471,7 @@ ySCHED_raw              (void *a_sched)
 }
 
 char
-ySCHED_force            (void **a_sched, char *a_recd)
+ysched_force            (void **a_sched, char *a_recd)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -524,8 +534,8 @@ ysched_update           (void *a_sched)
       return rce;
    }
    /*---(update validity)----------------*/
-   sprintf (t, ".valid %s %s", g_curr->beg, g_curr->end);
-   ySCHED_valid (t);
+   /*> sprintf (t, ".valid %s %s", g_curr->beg, g_curr->end);                         <*/
+   /*> ySCHED_valid (t);                                                              <*/
    /*---(parse)--------------------------*/
    rc = ysched_parse__finish ();
    DEBUG_YSCHED  yLOG_value   ("finish"    , rc);
@@ -554,7 +564,7 @@ ysched_update_all       (void)
 }
 
 char
-ySCHED_details          (char *a_min, char *a_hrs, char *a_dys, char *a_mos, char *a_dow, char *a_wks, char *a_yrs, char *a_beg, char *a_end, char *a_valid)
+ySCHED_details          (char *a_min, char *a_hrs, char *a_dys, char *a_mos, char *a_dow, char *a_wks, char *a_yrs)
 {
    if (a_min   != NULL)  strlcpy (a_min, g_curr->min, LEN_LONG);
    if (a_hrs   != NULL)  strlcpy (a_hrs, g_curr->hrs, LEN_TITLE);
@@ -563,9 +573,9 @@ ySCHED_details          (char *a_min, char *a_hrs, char *a_dys, char *a_mos, cha
    if (a_dow   != NULL)  strlcpy (a_dow, g_curr->dow, LEN_TERSE);
    if (a_wks   != NULL)  strlcpy (a_wks, g_curr->wks, LEN_LONG);
    if (a_yrs   != NULL)  strlcpy (a_yrs, g_curr->yrs, LEN_LONG);
-   if (a_beg   != NULL)  strlcpy (a_beg, g_curr->beg, LEN_TERSE);
-   if (a_end   != NULL)  strlcpy (a_end, g_curr->end, LEN_TERSE);
-   if (a_valid != NULL)  *a_valid = g_curr->valid;
+   /*> if (a_beg   != NULL)  strlcpy (a_beg, g_curr->beg, LEN_TERSE);                 <*/
+   /*> if (a_end   != NULL)  strlcpy (a_end, g_curr->end, LEN_TERSE);                 <*/
+   /*> if (a_valid != NULL)  *a_valid = g_curr->valid;                                <*/
    return 0;
 }
 
@@ -609,7 +619,9 @@ ysched_parse__unit      (char *a_question, int a_num)
       }
    }
    /*---(detailed parsing)---------------*/
-   else if (strcmp(a_question, "minutes"      ) == 0) {
+   else if (strcmp(a_question, "eval"         ) == 0) {
+      sprintf(unit_answer, "PARSE eval       : %c",    g_curr->eval);
+   } else if (strcmp(a_question, "minutes"      ) == 0) {
       sprintf(unit_answer, "PARSE minutes    : %.65s", g_curr->min);
    } else if (strcmp(a_question, "hours"        ) == 0) {
       sprintf(unit_answer, "PARSE hours      : %.35s", g_curr->hrs);
@@ -623,8 +635,8 @@ ysched_parse__unit      (char *a_question, int a_num)
       sprintf(unit_answer, "PARSE weeks      : %.60s", g_curr->wks);
    } else if (strcmp(a_question, "years"        ) == 0) {
       sprintf(unit_answer, "PARSE years      : %.60s", g_curr->yrs);
-   } else if (strcmp(a_question, "valid"        ) == 0) {
-      sprintf(unit_answer, "PARSE valid      : %-8.8s  %c  %-8.8s", g_curr->beg, g_curr->valid, g_curr->end);
+   /*> } else if (strcmp(a_question, "valid"        ) == 0) {                         <*/
+      /*> sprintf(unit_answer, "PARSE valid      : %-8.8s  %c  %-8.8s", g_curr->beg, g_curr->valid, g_curr->end);   <*/
    } else if (strcmp(a_question, "update"       ) == 0) {
       sprintf(unit_answer, "PARSE update     : %-10ld  %02d  %02d  %02d", g_curr->epoch, g_curr->year, g_curr->month, g_curr->day);
    }

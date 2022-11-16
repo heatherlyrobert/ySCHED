@@ -121,28 +121,22 @@ typedef    unsigned long  ulong;
 
 
 /*===[[ PUBLIC FUNCTIONS ]]===============================*/
-
 /*345678901-12345678901-12345678901-12345678901-12345678901-12345678901-123456*/
+/*---(base)-----------------*/
+char        ySCHED_date             (char a_year, char a_month, char a_day);
+char        ySCHED_create           (void **a_sched, cchar *a_recd);
+char        ySCHED_test             (void *a_sched, char a_hour, char a_minute, char *r_note);
+char        ySCHED_free             (void **a_sched);
+/*---(base)-----------------*/
+char        ySCHED_epoch            (long a_epoch);
+char        ySCHED_teste            (void *a_sched, long a_epoch);
+/*---(debugging)------------*/
 char*       ySCHED_version          (void);
-
-char        ySCHED_config_by_date   (char a_year, char a_month, char a_day);
-char        ySCHED_config_by_epoch  (long a_epoch);
-
-char        ySCHED_newfile          (void);
-char        ySCHED_valid            (char *a_recd);
-
-char        ySCHED_create           (void **a_sched, char *a_recd);
-char        ySCHED_force            (void **a_sched, char *a_recd);
-char        ySCHED_retire           (void **a_sched);
-
-char        ySCHED_test_by_time     (void *a_sched, int a_hour, int a_minute);
-char        ySCHED_test_by_epoch    (void *a_sched, long a_epoch);
-
-char        ySCHED_feedback         (int *a_line, char *a_focus, char *a_issue, int *a_beg, int *a_len, char *a_fancy);
-char        ySCHED_details          (char *a_min, char *a_hrs, char *a_dys, char *a_mos, char *a_dow, char *a_wks, char *a_yrs, char *a_beg, char *a_end, char *a_valid);
-
-
+char        ySCHED_feedback         (int *r_line, char *r_sect, char *r_focus, char *r_issue, int *r_beg, int *r_len, char *r_fancy);
+char        ySCHED_details          (char *a_min, char *a_hrs, char *a_dys, char *a_mos, char *a_dow, char *a_wks, char *a_yrs);
 char*       ySCHED_raw              (void *a_sched);
+/*---(done)-----------------*/
+
 
 
 #endif

@@ -192,6 +192,10 @@ ysched_date__max_days   (void)
    x_broke          = localtime(&x_epoch);       /* break it down        */
    mySCHED.s_dim    = x_broke->tm_mday;         /* the day is now max   */
    DEBUG_YSCHED  yLOG_value   ("s_dim"      , mySCHED.s_dim);
+   --rce;  if (mySCHED.s_dim < mySCHED.s_day) {
+      DEBUG_YSCHED  yLOG_exitr   (__FUNCTION__, rce);
+      return rce;
+   }
    /*---(max day of year)----------------*/
    x_broke          = localtime (&(mySCHED.s_epoch));
    ++x_broke->tm_year;                  /* go to the next year             */
@@ -325,7 +329,7 @@ ysched_date__update     (cchar a_year, cchar a_month, cchar a_day)
 }
 
 char       /*--> set the data for parsing ------------------------------------*/
-ySCHED_config_by_date   (char a_year, char a_month, char a_day)
+ySCHED_date             (char a_year, char a_month, char a_day)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;
@@ -343,6 +347,7 @@ ySCHED_config_by_date   (char a_year, char a_month, char a_day)
    rc = ysched_date__driver ();
    DEBUG_YSCHED  yLOG_value   ("driver"    , rc);
    --rce;  if (rc < 0) {
+      ysched_date_reset ();
       DEBUG_YSCHED  yLOG_exitr   (__FUNCTION__, rce);
       return rce;
    }
@@ -352,7 +357,7 @@ ySCHED_config_by_date   (char a_year, char a_month, char a_day)
 }
 
 char
-ySCHED_config_by_epoch  (long a_epoch)
+ySCHED_epoch            (long a_epoch)
 {
    /*---(locals)-----------+-----+-----+-*/
    char        rce         =  -10;

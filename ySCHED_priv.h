@@ -27,8 +27,8 @@
 
 #define     P_VERMAJOR  "1.--, in production and general use"
 #define     P_VERMINOR  "1.4-, clean, rework, and expand testing"
-#define     P_VERNUM    "1.4j"
-#define     P_VERTXT    "update with more simple debugging for khronos testing"
+#define     P_VERNUM    "1.4k"
+#define     P_VERTXT    "ready for new valid, blacklist, retire records"
 
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
@@ -113,6 +113,7 @@ struct cLOCAL {
    char        full        [LEN_RECD];
    char        x_raw       [LEN_RECD];
    char        x_field     [LEN_RECD];
+   char        x_eval;
    char       *x_min;
    char       *x_hrs;
    char       *x_dys;
@@ -166,6 +167,7 @@ struct  cSCHED
    char      minute;
    char      result;
    /*---(details)-----------*/
+   char      eval;                    /* normal, start at, end before         */
    char      min   [LEN_LONG];        /* minutes           0-59               */
    char      hrs   [LEN_TITLE];       /* hours             0-23               */
    char      dys   [LEN_DESC];        /* days of month     1-31               */
@@ -173,10 +175,6 @@ struct  cSCHED
    char      dow   [LEN_TERSE];       /* day of week       1-7                */
    char      wks   [LEN_LONG];        /* week of year      1-53               */
    char      yrs   [LEN_LONG];        /* years             1-50               */
-   /*---(validity)----------*/
-   char      beg   [LEN_TERSE];       /* effective beginning (inclusive)      */
-   char      end   [LEN_TERSE];       /* effective ending (inclusive)         */
-   char      valid;                   /* valid for update time                */
    /*---(links)-------------*/
    tSCHED   *m_prev;
    tSCHED   *m_next;
@@ -222,6 +220,7 @@ extern int   s_max;
 
 extern int   e_field;
 extern int   e_section;
+extern char  e_sect      [LEN_LABEL];
 extern char  e_func      [LEN_LABEL];
 extern int   e_line;
 extern char  e_issue     [LEN_DESC];
@@ -264,7 +263,7 @@ char        ysched__between         (void);
 char        ysched__range           (void);
 /*---(drivers)--------------*/
 char        ysched__section         (cchar *a_sect, char *a_array);
-char        ysched_field            (cchar *a_input, char *a_array, char a_type);
+char        ysched_field            (cchar *a_input, char *a_array, char a_type, char a_eval);
 char*       ysched_field__unit      (char *a_question);
 /*---(done)-----------------*/
 
@@ -291,6 +290,7 @@ char*       ysched_parse__memory    (tSCHED *a_sched);
 /*---(memory)---------------*/
 char        ysched_parse__new       (tSCHED **a_new);
 char        ysched_parse__free      (tSCHED **a_old);
+char        ysched_force            (void **a_sched, char *a_recd);
 char        ysched_purge            (void);
 char        ysched_update           (void *a_sched);
 char        ysched_update_all       (void);
