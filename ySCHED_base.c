@@ -104,8 +104,8 @@ ySCHED__init       (void)
     *>    g_curr.wks [i]    = '_';                                                   <* 
     *> }                                                                              <*/
    /*---(effective)----------------------*/
-   /*> strlcpy (g_curr.beg, "00.01.01", LEN_TERSE);                                  <* 
-    *> strlcpy (g_curr.end, "50.01.01", LEN_TERSE);                                  <*/
+   /*> ystrlcpy (g_curr.beg, "00.01.01", LEN_TERSE);                                  <* 
+    *> ystrlcpy (g_curr.end, "50.01.01", LEN_TERSE);                                  <*/
    /*> for (i = 0; i < LEN_VALID; ++i) {                                              <* 
     *>    g_curr.valid [i] = '_';                                                    <* 
     *> }                                                                              <*/

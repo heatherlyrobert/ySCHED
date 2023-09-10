@@ -95,6 +95,9 @@ month starts on.  it takes three integers...
  - a_yr is since 2000
  - a_mo is 1-12
  - a_dy is 1-n depending on the month
+
+all existing schedule records will automatically update as necessary when the
+date is changed.  just year and month changes force updates.
 .RE
 
 .BI "char  ySCHED_create   (void **" "r_sched" ", cchar *" "a_recd" ");"
@@ -102,6 +105,9 @@ month starts on.  it takes three integers...
 takes the scheduling string part of the input record and creates a schedule
 entry, passing a pointer back to the r_sched.  you will need this for the
 testing calls later.
+
+schedule record will be created given the current ySCHED_date settings.  if
+not set, create will fail.
 .RE
 
 .BI "char  ySCHED_test     (void  *" "a_sched" ", char " "a_hr" ", char " "a_mn" ", ´´´>"

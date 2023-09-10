@@ -26,7 +26,7 @@ ysched_date_reset        (void)
    mySCHED.s_wiy   = mySCHED.s_dim   = mySCHED.s_fdow  = 0;
    /*---(field specific)-----------------*/
    s_type      = -1;
-   strlcpy (s_label, "-", LEN_LABEL);
+   ystrlcpy (s_label, "-", LEN_LABEL);
    s_min       = 0;
    s_max       = 0;
    s_tmax      = 0;

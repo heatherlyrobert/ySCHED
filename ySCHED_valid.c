@@ -52,8 +52,8 @@ static void      o___EFFECTIVE_______________o (void) {;}
  *>    /+---(locals)-------------------------+/                                        <* 
  *>    int       i         = 0;            /+ loop iterator -- day                +/   <* 
  *>    /+---(initialize)---------------------+/                                        <* 
- *>    strlcpy (g_beg, "50.01.01", LEN_TERSE);                                         <* 
- *>    strlcpy (g_end, "00.01.01", LEN_TERSE);                                         <* 
+ *>    ystrlcpy (g_beg, "50.01.01", LEN_TERSE);                                         <* 
+ *>    ystrlcpy (g_end, "00.01.01", LEN_TERSE);                                         <* 
  *>    s_bvalid =  365;                                                                <* 
  *>    s_evalid = -100;                                                                <* 
  *>    for (i = 0; i < LEN_VALID; ++i)  mySCHED.valid [i] = '_';                       <* 
@@ -93,7 +93,7 @@ static void      o___EFFECTIVE_______________o (void) {;}
  *>       return rce;                                                                           <* 
  *>    }                                                                                        <* 
  *>    DEBUG_YSCHED yLOG_info    ("a_date"    , a_date);                                        <* 
- *>    strlcpy (x_date, a_date, LEN_TERSE);                                                     <* 
+ *>    ystrlcpy (x_date, a_date, LEN_TERSE);                                                     <* 
  *>    /+---(field offset)-------------------+/                                                 <* 
  *>    e_section = 0;                                                                           <* 
  *>    e_field   = a_date - mySCHED.x_raw;                                                      <* 
@@ -110,16 +110,16 @@ static void      o___EFFECTIVE_______________o (void) {;}
  *>    localtime_r (&a_now, &d);                                                                <* 
  *>    /+---(beg date)-----------------------+/                                                 <* 
  *>    --rce;  if (a_side == 'b' && strcmp (x_date, "<") == 0) {                                <* 
- *>       strlcpy (x_date, "00.01.01", LEN_TERSE);                                              <* 
+ *>       ystrlcpy (x_date, "00.01.01", LEN_TERSE);                                              <* 
  *>       strptime (x_date, "%y.%m.%d", &d);                                                    <* 
  *>    } else if (a_side == 'b' && strcmp (x_date, "-") == 0) {                                 <* 
- *>       strlcpy (x_date, "50.01.01", LEN_TERSE);                                              <* 
+ *>       ystrlcpy (x_date, "50.01.01", LEN_TERSE);                                              <* 
  *>       strptime (x_date, "%y.%m.%d", &d);                                                    <* 
  *>    } else if (a_side == 'e' && strcmp (a_date, ">") == 0) {                                 <* 
- *>       strlcpy (x_date, "50.01.01", LEN_TERSE);                                              <* 
+ *>       ystrlcpy (x_date, "50.01.01", LEN_TERSE);                                              <* 
  *>       strptime (x_date, "%y.%m.%d", &d);                                                    <* 
  *>    } else if (a_side == 'e' && strcmp (x_date, "-") == 0) {                                 <* 
- *>       strlcpy (x_date, "00.01.01", LEN_TERSE);                                              <* 
+ *>       ystrlcpy (x_date, "00.01.01", LEN_TERSE);                                              <* 
  *>       strptime (x_date, "%y.%m.%d", &d);                                                    <* 
  *>    } else if (strlen (x_date) == 8) {                                                       <* 
  *>       p = strptime (x_date, "%y.%m.%d", &d);                                                <* 
@@ -143,11 +143,11 @@ static void      o___EFFECTIVE_______________o (void) {;}
  *>    DEBUG_YSCHED yLOG_value   ("x_off"     , x_off);                                         <* 
  *>    switch (a_side) {                                                                        <* 
  *>    case 'b' :                                                                               <* 
- *>       strlcpy (g_beg, x_date, LEN_TERSE);                                                   <* 
+ *>       ystrlcpy (g_beg, x_date, LEN_TERSE);                                                   <* 
  *>       s_bvalid = x_off;                                                                     <* 
  *>       break;                                                                                <* 
  *>    case 'e' :                                                                               <* 
- *>       strlcpy (g_end, x_date, LEN_TERSE);                                                   <* 
+ *>       ystrlcpy (g_end, x_date, LEN_TERSE);                                                   <* 
  *>       s_evalid = x_off;                                                                     <* 
  *>       break;                                                                                <* 
  *>    }                                                                                        <* 

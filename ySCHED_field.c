@@ -97,10 +97,10 @@ struct {
    { "hours"         , "·"             ,   0 ,  23,  '·',  '·'   },
    { "hours"         , "W"             ,   8 ,  16,  '·',  '·'   },
    { "hours"         , "O"             ,   8 ,  16,  '·',  'y'   },
-   { "hours"         , "B"             ,   5 ,  22,  '·',  'y'   },
+   { "hours"         , "B"             ,   6 ,  21,  '·',  'y'   },
    { "hours"         , "work"          ,   8 ,  16,  '·',  '·'   },
    { "hours"         , "off"           ,   8 ,  16,  '·',  'y'   },
-   { "hours"         , "batch"         ,   5 ,  22,  '·',  'y'   },
+   { "hours"         , "batch"         ,   6 ,  21,  '·',  'y'   },
    /*--- hours : eighths and halves -----min---max---rev---inv--*/
    { "hours"         , "dawn"          ,   5 ,   7,  '·',  '·'   },
    { "hours"         , "morn"          ,   8 ,  10,  '·',  '·'   },
@@ -146,7 +146,7 @@ ysched__limits          (char a_type)
    char        rce         =  -10;
    /*---(default)------------------------*/
    s_type      = -1;
-   strlcpy (s_label, "-", LEN_LABEL);
+   ystrlcpy (s_label, "-", LEN_LABEL);
    s_min       = 0;
    s_max       = 0;
    s_tmax      = 0;
@@ -163,7 +163,7 @@ ysched__limits          (char a_type)
    --rce;  if (s_fields [a_type].label [0] == '-')  return rce;
    /*---(set full limits)----------------*/
    s_type      = a_type;
-   strlcpy (s_label, s_fields [a_type].label, LEN_LABEL);
+   ystrlcpy (s_label, s_fields [a_type].label, LEN_LABEL);
    s_min       = s_fields [a_type].min;
    s_max       = s_fields [a_type].max;
    s_tmax      = s_max;
@@ -191,8 +191,8 @@ ysched__prep       (char *p)
    s_inv       = '·';
    s_flp       = '·';
    s_stp       =   1;
-   strlcpy (s_section, "", LEN_HUND);
-   strlcpy (s_input  , "", LEN_HUND);
+   ystrlcpy (s_section, "", LEN_HUND);
+   ystrlcpy (s_input  , "", LEN_HUND);
    s_len       =   0;
    s_ptr       = s_input;
    /*---(defense)------------------------*/
@@ -202,8 +202,8 @@ ysched__prep       (char *p)
    }
    --rce;  if (p == NULL)   return rce;
    /*---(measure input string)-----------*/
-   strlcpy (s_section, p, LEN_HUND);
-   strlcpy (s_input  , p, LEN_HUND);
+   ystrlcpy (s_section, p, LEN_HUND);
+   ystrlcpy (s_input  , p, LEN_HUND);
    DEBUG_YSCHED yLOG_info    ("s_input"   , s_input);
    s_len       = strlen (s_input);
    DEBUG_YSCHED yLOG_value   ("s_len"     , s_len);
@@ -890,7 +890,7 @@ ysched__section    (cchar *a_sect, char *a_array)
       return rce;
    }
    DEBUG_YSCHED yLOG_info    ("a_sect"    , a_sect);
-   strlcpy (x_recd, a_sect, LEN_RECD);
+   ystrlcpy (x_recd, a_sect, LEN_RECD);
    /*---(prepare)------------------------*/
    rc = ysched__prep     (a_sect);
    DEBUG_YSCHED yLOG_value   ("prep"      , rc);
@@ -962,13 +962,13 @@ ysched_field       (cchar *a_field, char *a_array, char a_type, char a_eval)
    /*---(default)------------------------*/
    ysched__trouble ("-"      , 0       , "-"              , -1, 0);
    switch (a_type) {
-   case PARSE_MNS :  strlcpy (e_sect, "minutes"    , LEN_LABEL);  break;
-   case PARSE_HRS :  strlcpy (e_sect, "hours"      , LEN_LABEL);  break;
-   case PARSE_DYS :  strlcpy (e_sect, "days"       , LEN_LABEL);  break;
-   case PARSE_MOS :  strlcpy (e_sect, "months"     , LEN_LABEL);  break;
-   case PARSE_DOW :  strlcpy (e_sect, "day-of-week", LEN_LABEL);  break;
-   case PARSE_WKS :  strlcpy (e_sect, "weeks"      , LEN_LABEL);  break;
-   case PARSE_YRS :  strlcpy (e_sect, "years"      , LEN_LABEL);  break;
+   case PARSE_MNS :  ystrlcpy (e_sect, "minutes"    , LEN_LABEL);  break;
+   case PARSE_HRS :  ystrlcpy (e_sect, "hours"      , LEN_LABEL);  break;
+   case PARSE_DYS :  ystrlcpy (e_sect, "days"       , LEN_LABEL);  break;
+   case PARSE_MOS :  ystrlcpy (e_sect, "months"     , LEN_LABEL);  break;
+   case PARSE_DOW :  ystrlcpy (e_sect, "day-of-week", LEN_LABEL);  break;
+   case PARSE_WKS :  ystrlcpy (e_sect, "weeks"      , LEN_LABEL);  break;
+   case PARSE_YRS :  ystrlcpy (e_sect, "years"      , LEN_LABEL);  break;
    }
    /*---(defense)------------------------*/
    --rce;  if (YSCHED_NOT_READY) {
@@ -992,13 +992,13 @@ ysched_field       (cchar *a_field, char *a_array, char a_type, char a_eval)
    --rce;  if (a_field == NULL)  {
       /*---(check for defaulting)-----------*/
       if (a_type == PARSE_WKS || a_type == PARSE_YRS) {
-         strlcpy (mySCHED.x_field, "*", LEN_RECD);
+         ystrlcpy (mySCHED.x_field, "*", LEN_RECD);
       } else {
          DEBUG_YSCHED yLOG_exitr (__FUNCTION__, rce);
          return rce;
       }
    } else {
-      strlcpy (mySCHED.x_field, a_field, LEN_RECD);
+      ystrlcpy (mySCHED.x_field, a_field, LEN_RECD);
    }
    DEBUG_YSCHED yLOG_point   ("x_field"   , mySCHED.x_field);
    /*---(field offset)-------------------*/

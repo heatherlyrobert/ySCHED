@@ -26,19 +26,19 @@ static void      o___ERRORS__________________o (void) {;};
 char
 ysched__trouble         (int *a_func, int a_line, char *a_issue, int a_pos, int a_len)
 {
-   strlcpy (e_func , a_func , LEN_LABEL);
+   ystrlcpy (e_func , a_func , LEN_LABEL);
    e_line  = a_line;
-   strlcpy (e_issue, a_issue, LEN_DESC);
+   ystrlcpy (e_issue, a_issue, LEN_DESC);
    e_pos   = a_pos;
    e_len   = a_len;
-   strlcpy (e_fancy, ""     , LEN_RECD);
+   ystrlcpy (e_fancy, ""     , LEN_RECD);
    return 0;
 }
 
 char
 ysched_error_reset      (void)
 {
-   strlcpy (mySCHED.x_field, "", LEN_HUND);
+   ystrlcpy (mySCHED.x_field, "", LEN_HUND);
    e_field    = 0;
    e_section  = 0;
    ysched__trouble ("-", 0, "-", -1, 0);
@@ -51,27 +51,27 @@ ysched_fancify          (void)
    char        t           [LEN_RECD]  = "";
    char        o           =    0;
    if (e_line <= 0) {
-      strlcpy (e_fancy, BOLD_GRN, LEN_RECD);
-      strlcat (e_fancy, mySCHED.full, LEN_RECD);
-      strlcat (e_fancy, BOLD_OFF, LEN_RECD);
+      ystrlcpy (e_fancy, BOLD_GRN, LEN_RECD);
+      ystrlcat (e_fancy, mySCHED.full, LEN_RECD);
+      ystrlcat (e_fancy, BOLD_OFF, LEN_RECD);
       return 0;
    }
    if (e_pos  <  0) {
-      strlcpy (e_fancy, BOLD_MAG, LEN_RECD);
-      strlcat (e_fancy, mySCHED.full, LEN_RECD);
-      strlcat (e_fancy, BOLD_OFF, LEN_RECD);
+      ystrlcpy (e_fancy, BOLD_MAG, LEN_RECD);
+      ystrlcat (e_fancy, mySCHED.full, LEN_RECD);
+      ystrlcat (e_fancy, BOLD_OFF, LEN_RECD);
       return 0;
    }
    o = e_field + e_section + e_pos;
    if (o > 0)  sprintf (t, "%s%-*.*s%s", BOLD_GRN, o, o, mySCHED.full, BOLD_OFF);
    /*> printf ("\n");                                                                 <*/
-   strlcpy (e_fancy, t, LEN_RECD);
+   ystrlcpy (e_fancy, t, LEN_RECD);
    /*> printf ("%s\n", e_fancy);                                                      <*/
    sprintf (t, "%s%-*.*s%s", BOLD_ERR, e_len, e_len, mySCHED.full + o, BOLD_OFF);
-   strlcat (e_fancy, t, LEN_RECD);
+   ystrlcat (e_fancy, t, LEN_RECD);
    /*> printf ("%s\n", e_fancy);                                                      <*/
    sprintf (t, "%s%s%s", BOLD_BLK, mySCHED.full + o + e_len, BOLD_OFF);
-   strlcat (e_fancy, t, LEN_RECD);
+   ystrlcat (e_fancy, t, LEN_RECD);
    /*> printf ("%s\n", e_fancy);                                                      <*/
    return 0;
 }
@@ -80,12 +80,12 @@ char
 ySCHED_feedback         (int *r_line, char *r_sect, char *r_focus, char *r_issue, int *r_beg, int *r_len, char *r_fancy)
 {
    if (r_line  != NULL)  *r_line = e_line;
-   if (r_sect  != NULL)  strlcpy (r_sect , e_sect , LEN_LABEL);
-   if (r_focus != NULL)  strlcpy (r_focus, e_func , LEN_LABEL);
-   if (r_issue != NULL)  strlcpy (r_issue, e_issue, LEN_DESC);
+   if (r_sect  != NULL)  ystrlcpy (r_sect , e_sect , LEN_LABEL);
+   if (r_focus != NULL)  ystrlcpy (r_focus, e_func , LEN_LABEL);
+   if (r_issue != NULL)  ystrlcpy (r_issue, e_issue, LEN_DESC);
    if (r_beg   != NULL)  *r_beg   = e_pos;
    if (r_len   != NULL)  *r_len   = e_len;
-   if (r_fancy != NULL)  strlcpy (r_fancy, e_fancy, LEN_RECD);
+   if (r_fancy != NULL)  ystrlcpy (r_fancy, e_fancy, LEN_RECD);
    return 0;
 }
 

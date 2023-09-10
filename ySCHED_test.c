@@ -360,8 +360,8 @@ char       /*----: set up program urgents/debugging --------------------------*/
 ysched__unit_loud     (void)
 {
    yLOGS_begin ("ySCHED" , YLOG_SYS, YLOG_NOISE);
-   yURG_name  ("kitchen"      , YURG_ON);
-   yURG_name  ("ysched"       , YURG_ON);
+   yURG_by_name  ("kitchen"      , YURG_ON);
+   yURG_by_name  ("ysched"       , YURG_ON);
    DEBUG_YSCHED  yLOG_info     ("ySCHED"    , ySCHED_version   ());
    ysched_date_reset  ();
    ysched_error_reset ();

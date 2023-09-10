@@ -6,19 +6,23 @@
 #define     P_PURPOSE   "simple, elegant, and powerful kernighan scheduling grammar"
 
 #define     P_NAMESAKE  "eunomia-horae (good order)"
+#define     P_PRONOUNCE "yoo·noh·mee·uh ohr·ay"
 #define     P_HERITAGE  "goddesses of law and appropriate time"
+#define     P_BRIEFLY   "law and appropriate time"
 #define     P_IMAGERY   "beautiful, rose-bloomed maiden, sister of justice, peace, and fortune"
 #define     P_REASON    "represents the appropriate and correct time"
 
 #define     P_ONELINE   P_NAMESAKE " " P_SUBJECT
 
-#define     P_BASENAME  ""
-#define     P_FULLPATH  ""
+#define     P_HOMEDIR   "/home/system/ySCHED.scheduling_grammar_parser"
+#define     P_BASENAME  "ySCHED"
+#define     P_FULLNAME  "/usr/local/lib64/libySCHED"
 #define     P_SUFFIX    ""
 #define     P_CONTENT   ""
 
 #define     P_SYSTEM    "gnu/linux   (powerful, ubiquitous, technical, and hackable)"
 #define     P_LANGUAGE  "ansi-c      (wicked, limitless, universal, and everlasting)"
+#define     P_COMPILER  "gcc 5.3.0"
 #define     P_CODESIZE  "small       (appoximately 10,000 slocl)"
 #define     P_DEPENDS   "none"
 
@@ -27,8 +31,8 @@
 
 #define     P_VERMAJOR  "1.--, in production and general use"
 #define     P_VERMINOR  "1.4-, clean, rework, and expand testing"
-#define     P_VERNUM    "1.4l"
-#define     P_VERTXT    "eliminated ySCHED_valid logic and testing completely"
+#define     P_VERNUM    "1.4m"
+#define     P_VERTXT    "fixes due to changed str functions to ¶ystr¶ in ySTR"
 
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
