@@ -31,8 +31,8 @@
 
 #define     P_VERMAJOR  "1.--, in production and general use"
 #define     P_VERMINOR  "1.4-, clean, rework, and expand testing"
-#define     P_VERNUM    "1.4m"
-#define     P_VERTXT    "fixes due to changed str functions to ¶ystr¶ in ySTR"
+#define     P_VERNUM    "1.4n"
+#define     P_VERTXT    "minor updates to support library changes"
 
 #define     P_PRIORITY  "direct, simple, brief, vigorous, and lucid (h.w. fowler)"
 #define     P_PRINCIPAL "[grow a set] and build your wings on the way down (r. bradbury)"
